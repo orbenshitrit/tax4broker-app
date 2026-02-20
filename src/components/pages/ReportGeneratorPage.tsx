@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Page, ReportMeta } from "@/components/AppShell";
@@ -33,15 +33,14 @@ interface ReportOutputs {
   h1_count: number;
   h2_count: number;
   files: Record<string, ReportFile>;
-  sales_profit_h1_ils_25?: number;
-  losses_h1_total_ils_25?: number;
-  sales_proceeds_h1_ils?: number;
-  sales_profit_h2_ils_25?: number;
-  losses_h2_total_ils_25?: number;
-  sales_proceeds_h2_ils?: number;
-  dividends_total_ils?: number;
-  dividends_total_h1_ils?: number;
-  dividends_total_h2_ils?: number;
+  sales_profit_h1?: number;
+  losses_h1?: number;
+  proceeds_h1?: number;
+  sales_profit_h2?: number;
+  losses_h2?: number;
+  proceeds_h2?: number;
+  dividends_h1_ils?: number;
+  dividends_h2_ils?: number;
   save_status?: string;
 }
 
@@ -108,38 +107,52 @@ function Annex1322Dialog({
     setLoading(true);
     try {
       const body = {
-        year,
+        report_year: year,
         seller_name: sellerName,
-        file_number: fileNumber,
-        ownership,
-        pre_marriage: preMarriage === "כן",
-        related_sale: relatedSale === "כן",
-        related_purchase: relatedPurchase === "כן",
-        reit: reit === "כן",
+        client_file_number: fileNumber,
+        ownership: ownership === "בבעלותי",
+        acquired_pre_marriage: preMarriage === "כן",
+        related_party_sale: relatedSale === "כן",
+        purchase_from_related_party: relatedPurchase === "כן",
+        reit_profit: reit === "כן",
         tax_withheld: taxWithheld === "כן",
         carryover_losses: numCarry,
-        non_securities_losses: numNonSec,
-        business_losses: numBusiness,
-        /* pass report data for the PDF builder */
-        sales_profit_h1: reportOutputs.sales_profit_h1_ils_25 ?? 0,
-        losses_h1: reportOutputs.losses_h1_total_ils_25 ?? 0,
-        proceeds_h1: reportOutputs.sales_proceeds_h1_ils ?? 0,
-        sales_profit_h2: reportOutputs.sales_profit_h2_ils_25 ?? 0,
-        losses_h2: reportOutputs.losses_h2_total_ils_25 ?? 0,
-        proceeds_h2: reportOutputs.sales_proceeds_h2_ils ?? 0,
-        dividends_h1: reportOutputs.dividends_total_h1_ils ?? 0,
-        dividends_h2: reportOutputs.dividends_total_h2_ils ?? 0,
-        dividends_total: reportOutputs.dividends_total_ils ?? 0,
-        h1_count: reportOutputs.h1_count,
-        h2_count: reportOutputs.h2_count,
+        offset_non_securities: numNonSec,
+        offset_business_losses: numBusiness,
+        sales_profit_h1: reportOutputs.sales_profit_h1 ?? 0,
+        losses_h1: reportOutputs.losses_h1 ?? 0,
+        proceeds_h1: reportOutputs.proceeds_h1 ?? 0,
+        sales_profit_h2: reportOutputs.sales_profit_h2 ?? 0,
+        losses_h2: reportOutputs.losses_h2 ?? 0,
+        proceeds_h2: reportOutputs.proceeds_h2 ?? 0,
+        dividends_h1_ils: reportOutputs.dividends_h1_ils ?? 0,
+        dividends_h2_ils: reportOutputs.dividends_h2_ils ?? 0,
       };
       const token = await getToken();
-      const res = await apiFetch<{ files: Record<string, ReportFile> }>("/api/reports/annex-1322", {
+      const raw = await apiFetch<Record<string, string>>("/api/reports/annex-1322", {
         method: "POST",
         body: JSON.stringify(body),
         token,
       });
-      onAnnexGenerated(res.files);
+      /* Transform backend response to ReportFile format */
+      const annexFiles: Record<string, ReportFile> = {};
+      if (raw.h1_pdf_b64) {
+        annexFiles.annex_1322_pdf = {
+          data: raw.h1_pdf_b64,
+          name: raw.h1_name || "טופס_1322_H1.pdf",
+          mime: "application/pdf",
+          label: "📄 טופס 1322 — ינואר–יוני",
+        };
+      }
+      if (raw.h2_pdf_b64) {
+        annexFiles.annex_1322_pdf_h2 = {
+          data: raw.h2_pdf_b64,
+          name: raw.h2_name || "טופס_1322_H2.pdf",
+          mime: "application/pdf",
+          label: "📄 טופס 1322 — יולי–דצמבר",
+        };
+      }
+      onAnnexGenerated(annexFiles);
       onClose();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "שגיאה בהפקת נספח 1322");
@@ -374,11 +387,29 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
       if (dividendsFile) fd.append("dividends_file", dividendsFile);
 
       const token = await getToken();
-      const res = await apiFetch<ReportOutputs>("/api/reports/process", { method: "POST", body: fd, token });
+      const raw = await apiFetch<any>("/api/reports/process", { method: "POST", body: fd, token });
       clearInterval(progressInterval);
       setProgress(100);
       setProgressText("הושלם!");
-      setOutputs(res);
+
+      /* Transform file objects from backend format (data_b64 → data, add mime/label) */
+      const files: Record<string, ReportFile> = {};
+      if (raw.files) {
+        const labels: Record<string, string> = {
+          main_excel: `📗 דוח ראשי — ${raw.client_name}.xlsx`,
+          ref_excel_a: "📙 אסמכתה ל-1325 א",
+          ref_excel_b: "📙 אסמכתה ל-1325 ב",
+        };
+        for (const [key, f] of Object.entries(raw.files) as [string, any][]) {
+          files[key] = {
+            data: f.data_b64 || f.data || "",
+            name: f.name || `${key}.xlsx`,
+            mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            label: labels[key] || key,
+          };
+        }
+      }
+      setOutputs({ ...raw, files } as ReportOutputs);
       setAnnexShown(false);
       await refreshUserData();
     } catch (e: unknown) {
@@ -395,6 +426,13 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setOutputs({ ...outputs, files: { ...outputs.files, ...files } });
     setAnnexShown(true);
   }, [outputs]);
+
+  /* Auto-open annex 1322 dialog when report completes */
+  useEffect(() => {
+    if (outputs && !annexShown && outputs.save_status !== "restored" && !annexOpen) {
+      setAnnexOpen(true);
+    }
+  }, [outputs, annexShown, annexOpen]);
 
   /* ---- New Report ---- */
   const newReport = () => {
@@ -486,10 +524,15 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           )}
         </div>
 
-        {/* New report */}
-        <button className="btn-secondary mt-6 w-full py-3" onClick={newReport}>
-          <FileSpreadsheet className="mr-1.5 inline h-4 w-4" /> הפק דוח חדש
-        </button>
+        {/* Navigation */}
+        <div className="mt-6 space-y-3">
+          <button className="btn-primary w-full py-3" onClick={() => navigate("dashboard")}>
+            <ArrowRight className="mr-1.5 inline h-4 w-4" /> חזרה לדשבורד
+          </button>
+          <button className="btn-secondary w-full py-3" onClick={newReport}>
+            <FileSpreadsheet className="mr-1.5 inline h-4 w-4" /> הפק דוח חדש
+          </button>
+        </div>
 
         {/* Annex dialog */}
         <Annex1322Dialog

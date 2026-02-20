@@ -55,7 +55,7 @@ body {
   background: var(--color-indigo-500);
   color: #fff;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
   padding: 0.625rem 1.5rem;
@@ -63,11 +63,45 @@ body {
 }
 .btn-primary:hover {
   background: var(--color-indigo-600);
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--shadow-lift), 0 0 0 3px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-whisper);
 }
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-edge);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-whisper);
+}
+.btn-secondary:hover {
+  border-color: var(--color-indigo-300);
+  background: var(--color-surface-subtle);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+.btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-whisper);
 }
 
 .btn-ghost {
@@ -80,7 +114,7 @@ body {
   color: var(--color-ink);
   font-weight: 600;
   background: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
@@ -88,6 +122,11 @@ body {
 .btn-ghost:hover {
   border-color: var(--color-edge-strong);
   background: var(--color-surface-subtle);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+.btn-ghost:active {
+  transform: translateY(0);
 }
 
 .btn-danger {
@@ -99,7 +138,7 @@ body {
   background: #EF4444;
   color: #fff;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
   padding: 0.5rem 1rem;
@@ -107,6 +146,11 @@ body {
 }
 .btn-danger:hover {
   background: #DC2626;
+  box-shadow: var(--shadow-lift), 0 0 0 3px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
+}
+.btn-danger:active {
+  transform: translateY(0);
 }
 
 /* ── Card ── */
@@ -115,7 +159,7 @@ body {
   border: 1px solid var(--color-edge);
   background: var(--color-surface);
   box-shadow: var(--shadow-whisper);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card:hover {
   box-shadow: var(--shadow-card);
@@ -173,15 +217,18 @@ body {
   padding: 2rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .drop-zone:hover {
   border-color: var(--color-indigo-300);
   background: var(--color-indigo-50);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
 }
 .drop-zone.active {
   border-color: var(--color-indigo-500);
   background: var(--color-indigo-50);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 /* ── Progress Bar ── */
