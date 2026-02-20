@@ -1,9 +1,6 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
-import LoginPage from "@/components/pages/LoginPage";
-import AppShell from "@/components/AppShell";
 
 /* ─── Error Boundary ─── */
 class ErrorBoundary extends Component<
@@ -35,30 +32,20 @@ class ErrorBoundary extends Component<
   }
 }
 
-function AuthGate() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
-  return <AppShell />;
+function MinimalTest() {
+  return (
+    <div style={{ padding: 40, textAlign: "center", fontFamily: "sans-serif" }}>
+      <h1>Tax4Broker - Minimal Test</h1>
+      <p>If you see this, the basic Next.js setup works.</p>
+      <p>API URL: {process.env.NEXT_PUBLIC_API_URL || "NOT SET"}</p>
+    </div>
+  );
 }
 
 export default function Home() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
+      <MinimalTest />
     </ErrorBoundary>
   );
 }
