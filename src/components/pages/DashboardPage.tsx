@@ -111,15 +111,15 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
     (async () => {
       try {
         const token = await getToken();
-        const data = await apiFetch<ReportMeta[]>("/api/reports/history", { token });
-        setHistory(data);
+        const res = await apiFetch<{ reports: ReportMeta[] }>("/api/reports/history", { token });
+        setHistory(Array.isArray(res) ? res : res.reports ?? []);
       } catch {
         /* ignore */
       } finally {
         setLoadingHistory(false);
       }
     })();
-  }, []);
+  }, [getToken]);
 
   /* Free check handler */
   const runFreeCheck = useCallback(async () => {
