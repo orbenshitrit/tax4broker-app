@@ -105,6 +105,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
   const [leadOpen, setLeadOpen] = useState(false);
   const [history, setHistory] = useState<ReportMeta[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyLimit, setHistoryLimit] = useState(3);
 
   /* Fetch report history */
   useEffect(() => {
@@ -149,7 +150,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
       <div className="card mb-6 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
         {/* User */}
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 text-lg font-semibold text-indigo-600">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-muted text-lg font-semibold text-ink">
             {firstLetter}
           </div>
           <div>
@@ -189,7 +190,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         <div className="flex items-center justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-              <Beaker className="h-5 w-5 text-indigo-500" /> בדיקה חינמית
+              <Beaker className="h-5 w-5 text-ink" /> בדיקה חינמית
             </h2>
             <p className="mt-1 text-xs text-ink-tertiary">
               העלה את 2 הקבצים כמו במדריך וקבל כמה מס נחסך לפי פס&quot;ד — ללא שימוש בקרדיטים
@@ -216,7 +217,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
                   className="hidden"
                   onChange={(e) => setTradesFile(e.target.files?.[0] ?? null)}
                 />
-                {tradesFile && <span className="mt-1 block truncate text-xs text-indigo-500">{tradesFile.name}</span>}
+                {tradesFile && <span className="mt-1 block truncate text-xs text-ink-secondary">{tradesFile.name}</span>}
               </label>
               {/* Dividends */}
               <label className="drop-zone cursor-pointer">
@@ -229,7 +230,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
                   className="hidden"
                   onChange={(e) => setDividendsFile(e.target.files?.[0] ?? null)}
                 />
-                {dividendsFile && <span className="mt-1 block truncate text-xs text-indigo-500">{dividendsFile.name}</span>}
+                {dividendsFile && <span className="mt-1 block truncate text-xs text-ink-secondary">{dividendsFile.name}</span>}
               </label>
             </div>
             <button className="btn-primary w-full" onClick={runFreeCheck} disabled={!tradesFile || processing}>
@@ -254,7 +255,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
       <div className="card p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-            <Archive className="h-5 w-5 text-indigo-500" /> היסטוריית דוחות
+            <Archive className="h-5 w-5 text-ink" /> היסטוריית דוחות
           </h2>
           <button className="btn-primary flex items-center gap-1.5 text-xs" onClick={() => navigate("generator")}>
             <Plus className="h-3.5 w-3.5" /> דוח חדש
@@ -263,7 +264,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
 
         {loadingHistory ? (
           <div className="flex justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink border-t-transparent" />
           </div>
         ) : history.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-surface-subtle p-6 text-center">
@@ -272,7 +273,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
           </div>
         ) : (
           <div className="space-y-2">
-            {history.map((r) => (
+            {history.slice(0, historyLimit).map((r) => (
               <div
                 key={r.id}
                 className="flex flex-col items-start gap-2 rounded-xl border border-slate-200 p-3 transition-colors hover:bg-surface-subtle sm:flex-row sm:items-center sm:justify-between"
@@ -291,6 +292,14 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
                 </button>
               </div>
             ))}
+            {history.length > historyLimit && (
+              <button
+                className="btn-ghost w-full py-2 text-xs"
+                onClick={() => setHistoryLimit((l) => l + 5)}
+              >
+                הצג עוד ({history.length - historyLimit} נוספים)
+              </button>
+            )}
           </div>
         )}
       </div>

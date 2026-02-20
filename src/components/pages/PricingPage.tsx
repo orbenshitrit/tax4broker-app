@@ -33,7 +33,7 @@ export default function PricingPage({ navigate }: Props) {
       const token = await getToken();
       await apiFetch("/api/credits/purchase", {
         method: "POST",
-        body: JSON.stringify({ plan_id: plan.id, quantity: qty }),
+        body: JSON.stringify({ plan_credits: plan.credits, quantity: qty }),
         token,
       });
       const totalCredits = plan.credits * qty;
@@ -44,7 +44,8 @@ export default function PricingPage({ navigate }: Props) {
       );
       await refreshUserData();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "שגיאה ברכישה");
+      const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+      setError(msg || "שגיאה ברכישה");
     } finally {
       setLoading(null);
     }
@@ -60,7 +61,7 @@ export default function PricingPage({ navigate }: Props) {
       {/* Header */}
       <div className="mb-8 text-center">
         <h1 className="text-xl font-semibold text-ink">
-          <CreditCard className="mb-1 inline h-6 w-6 text-indigo-500" /> רכישת קרדיטים
+          <CreditCard className="mb-1 inline h-6 w-6 text-ink" /> רכישת קרדיטים
         </h1>
         <p className="mt-1 text-sm text-ink-tertiary">כל קרדיט = דוח מס אחד</p>
       </div>
@@ -86,11 +87,11 @@ export default function PricingPage({ navigate }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: plan.id * 0.08 }}
             className={`card relative flex flex-col p-6 transition-shadow ${
-              plan.popular ? "ring-2 ring-indigo-500 shadow-lg" : ""
+              plan.popular ? "ring-2 ring-ink shadow-lg" : ""
             }`}
           >
             {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-500 px-3 py-0.5 text-xs font-semibold text-white">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ink px-3 py-0.5 text-xs font-semibold text-white">
                 <Star className="mr-1 inline h-3 w-3" /> הכי פופולרי
               </span>
             )}

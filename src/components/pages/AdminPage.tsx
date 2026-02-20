@@ -99,7 +99,7 @@ export default function AdminPage({ navigate }: Props) {
 
       {/* Title */}
       <h1 className="mb-6 text-center text-xl font-semibold text-ink">
-        <Shield className="mb-1 inline h-6 w-6 text-indigo-500" /> פאנל ניהול
+        <Shield className="mb-1 inline h-6 w-6 text-ink" /> פאנל ניהול
       </h1>
 
       {/* Feedback */}
@@ -137,7 +137,7 @@ export default function AdminPage({ navigate }: Props) {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink border-t-transparent" />
           </div>
         ) : users.length === 0 ? (
           <p className="text-sm text-ink-tertiary">לא נמצאו משתמשים.</p>

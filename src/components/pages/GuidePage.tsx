@@ -106,8 +106,8 @@ export default function GuidePage({ expanded: initialExpanded = false }: { expan
     text.split("\n").map((line, i) => {
       const html = line
         .replace(/\*\*(.*?)\*\*/g, '<strong class="text-ink">$1</strong>')
-        .replace(/`(.*?)`/g, '<code class="rounded bg-surface-muted px-1 py-0.5 text-xs text-indigo-600">$1</code>')
-        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-indigo-500 hover:underline">$1</a>');
+        .replace(/`(.*?)`/g, '<code class="rounded bg-surface-muted px-1 py-0.5 text-xs text-ink">$1</code>')
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-ink-secondary hover:underline">$1</a>');
       return (
         <span key={i} className="block text-sm leading-relaxed text-ink-secondary" dangerouslySetInnerHTML={{ __html: html }} />
       );
@@ -141,7 +141,7 @@ export default function GuidePage({ expanded: initialExpanded = false }: { expan
 
                 return (
                   <div key={n}>
-                    <h3 className="mb-2 text-sm font-semibold text-indigo-600">
+                    <h3 className="mb-2 text-sm font-semibold text-ink">
                       🔹 שלב {n} — {step.title}
                     </h3>
 
@@ -163,7 +163,7 @@ export default function GuidePage({ expanded: initialExpanded = false }: { expan
                             }}
                           />
                           <button
-                            className="mt-1 flex items-center gap-1 text-xs text-indigo-500 hover:underline"
+                            className="mt-1 flex items-center gap-1 text-xs text-ink-secondary hover:underline"
                             onClick={() => setZoomedImage(imageSrc)}
                           >
                             <ZoomIn className="h-3 w-3" /> הגדל

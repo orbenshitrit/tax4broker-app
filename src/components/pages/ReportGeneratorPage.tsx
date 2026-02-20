@@ -171,7 +171,7 @@ function Annex1322Dialog({
             type="button"
             onClick={() => onChange(v)}
             className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
-              value === v ? "bg-indigo-500 text-white" : "bg-surface-muted text-ink-secondary hover:bg-slate-200"
+              value === v ? "bg-ink text-white" : "bg-surface-muted text-ink-secondary hover:bg-slate-200"
             }`}
           >
             {v}
@@ -226,7 +226,7 @@ function Annex1322Dialog({
                   type="button"
                   onClick={() => setOwnership(v)}
                   className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
-                    ownership === v ? "bg-indigo-500 text-white" : "bg-surface-muted text-ink-secondary hover:bg-slate-200"
+                    ownership === v ? "bg-ink text-white" : "bg-surface-muted text-ink-secondary hover:bg-slate-200"
                   }`}
                 >
                   {v}
@@ -556,13 +556,13 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
 
       {/* Title */}
       <h1 className="mb-6 text-center text-xl font-semibold text-ink">
-        <FileSpreadsheet className="mb-1 inline h-6 w-6 text-indigo-500" /> הפקת דוח מס חדש
+        <FileSpreadsheet className="mb-1 inline h-6 w-6 text-ink" /> הפקת דוח מס חדש
       </h1>
 
       {/* Restore mode */}
       {selectedReport && (
-        <div className="card mb-6 border-indigo-200 bg-indigo-50 p-4">
-          <p className="mb-3 text-sm text-indigo-700">
+        <div className="card mb-6 border-edge bg-surface-muted p-4">
+          <p className="mb-3 text-sm text-ink-secondary">
             🔄 מצב שחזור — ניתן להוריד את הדוח השמור: <strong>{selectedReport.clientName}</strong>
           </p>
           <button className="btn-primary flex items-center gap-1.5 text-sm" onClick={handleRestore} disabled={restoring}>
@@ -601,7 +601,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
                 className="hidden"
                 onChange={(e) => setTradesFile(e.target.files?.[0] ?? null)}
               />
-              {tradesFile && <span className="mt-1 block truncate text-xs text-indigo-500">{tradesFile.name}</span>}
+              {tradesFile && <span className="mt-1 block truncate text-xs text-ink-secondary">{tradesFile.name}</span>}
             </label>
             <label className="drop-zone cursor-pointer text-center">
               <Upload className="mx-auto mb-2 h-6 w-6 text-ink-tertiary" />
@@ -614,7 +614,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
                 onChange={(e) => setDividendsFile(e.target.files?.[0] ?? null)}
               />
               {dividendsFile && (
-                <span className="mt-1 block truncate text-xs text-indigo-500">{dividendsFile.name}</span>
+                <span className="mt-1 block truncate text-xs text-ink-secondary">{dividendsFile.name}</span>
               )}
             </label>
           </div>
@@ -648,7 +648,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
               >
                 <div className="progress-bar">
                   <motion.div
-                    className="progress-bar h-full rounded-full bg-indigo-500"
+                    className="progress-bar h-full rounded-full bg-ink"
                     style={{ width: `${progress}%` }}
                     transition={{ duration: 0.3 }}
                   />
