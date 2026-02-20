@@ -151,7 +151,20 @@ export default function LoginPage() {
                 onClick={async () => {
                   setError("");
                   setLoading(true);
-                  try { await loginWithGoogle(); } catch { setError("שגיאה בהתחברות עם Google"); }
+                  try { await loginWithGoogle(); } catch (e: any) {
+                    const code = e?.code || "";
+                    if (code === "auth/popup-closed-by-user") {
+                      /* user closed it, no error */
+                    } else if (code === "auth/popup-blocked") {
+                      setError("הדפדפן חסם פופאפים. אנא אפשר חלונות קופצים בדפדפן.");
+                    } else if (code === "auth/unauthorized-domain") {
+                      setError("הדומיין לא מאושר ב-Firebase. נא להוסיף את הדומיין ב-Firebase Console → Authentication → Settings.");
+                    } else if (code === "auth/operation-not-allowed") {
+                      setError("התחברות עם Google לא מופעלת. נא להפעיל ב-Firebase Console → Authentication → Sign-in method → Google.");
+                    } else {
+                      setError(`שגיאה בהתחברות עם Google: ${code || e?.message || "לא ידוע"}`);
+                    }
+                  }
                   finally { setLoading(false); }
                 }}
                 disabled={loading}
@@ -210,7 +223,12 @@ export default function LoginPage() {
                 onClick={async () => {
                   setError("");
                   setLoading(true);
-                  try { await loginWithGoogle(); } catch { setError("שגיאה בהרשמה עם Google"); }
+                  try { await loginWithGoogle(); } catch (e: any) {
+                    const code = e?.code || "";
+                    if (code !== "auth/popup-closed-by-user") {
+                      setError(`שגיאה בהרשמה עם Google: ${code || e?.message || "לא ידוע"}`);
+                    }
+                  }
                   finally { setLoading(false); }
                 }}
                 disabled={loading}
