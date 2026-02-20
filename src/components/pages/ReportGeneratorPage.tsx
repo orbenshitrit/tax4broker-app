@@ -68,11 +68,13 @@ function Annex1322Dialog({
   onClose,
   reportOutputs,
   onAnnexGenerated,
+  getToken,
 }: {
   open: boolean;
   onClose: () => void;
   reportOutputs: ReportOutputs;
   onAnnexGenerated: (files: Record<string, ReportFile>) => void;
+  getToken: () => Promise<string>;
 }) {
   const [year, setYear] = useState(reportOutputs.year || 2024);
   const [sellerName, setSellerName] = useState("");
@@ -131,9 +133,11 @@ function Annex1322Dialog({
         h1_count: reportOutputs.h1_count,
         h2_count: reportOutputs.h2_count,
       };
+      const token = await getToken();
       const res = await apiFetch<{ files: Record<string, ReportFile> }>("/api/reports/annex-1322", {
         method: "POST",
         body: JSON.stringify(body),
+        token,
       });
       onAnnexGenerated(res.files);
       onClose();
@@ -275,7 +279,7 @@ function DownloadBtn({ file, icon, className = "" }: { file: ReportFile; icon: R
 
 /* ---------- Report Generator ---------- */
 export default function ReportGeneratorPage({ navigate, selectedReport, clearSelectedReport }: Props) {
-  const { userData, refreshUserData } = useAuth();
+  const { userData, refreshUserData, getToken } = useAuth();
   const credits = userData?.credits ?? 0;
 
   const [tradesFile, setTradesFile] = useState<File | null>(null);
@@ -369,7 +373,8 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
       fd.append("trades_file", tradesFile);
       if (dividendsFile) fd.append("dividends_file", dividendsFile);
 
-      const res = await apiFetch<ReportOutputs>("/api/reports/process", { method: "POST", body: fd });
+      const token = await getToken();
+      const res = await apiFetch<ReportOutputs>("/api/reports/process", { method: "POST", body: fd, token });
       clearInterval(progressInterval);
       setProgress(100);
       setProgressText("הושלם!");
@@ -492,6 +497,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           onClose={() => setAnnexOpen(false)}
           reportOutputs={outputs}
           onAnnexGenerated={handleAnnexGenerated}
+          getToken={getToken}
         />
       </div>
     );

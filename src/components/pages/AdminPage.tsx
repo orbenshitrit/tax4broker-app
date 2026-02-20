@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function AdminPage({ navigate }: Props) {
-  const { userData } = useAuth();
+  const { userData, getToken } = useAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetValue, setResetValue] = useState(0);
@@ -31,7 +31,8 @@ export default function AdminPage({ navigate }: Props) {
     if (!isAdmin) return;
     (async () => {
       try {
-        const data = await apiFetch<UserRow[]>("/api/admin/users");
+        const token = await getToken();
+        const data = await apiFetch<UserRow[]>("/api/admin/users", { token });
         setUsers(data);
       } catch {
         /* ignore */
@@ -48,18 +49,22 @@ export default function AdminPage({ navigate }: Props) {
 
   /* Actions */
   const resetAll = async () => {
+    const token = await getToken();
     await apiFetch("/api/admin/reset-all-credits", {
       method: "POST",
       body: JSON.stringify({ value: resetValue }),
+      token,
     });
     flash(`אופסו קרדיטים ל-${users.length} משתמשים (ערך: ${resetValue})`);
     setUsers((prev) => prev.map((u) => ({ ...u, credits: resetValue })));
   };
 
   const addCredits = async (userId: string, amount: number) => {
+    const token = await getToken();
     await apiFetch("/api/admin/add-credits", {
       method: "POST",
       body: JSON.stringify({ user_id: userId, amount }),
+      token,
     });
     flash(`נוספו ${amount} קרדיטים!`);
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, credits: u.credits + amount } : u)));
@@ -67,9 +72,11 @@ export default function AdminPage({ navigate }: Props) {
 
   const setCredits = async (userId: string) => {
     const val = setValues[userId] ?? 0;
+    const token = await getToken();
     await apiFetch("/api/admin/set-credits", {
       method: "POST",
       body: JSON.stringify({ user_id: userId, credits: val }),
+      token,
     });
     flash(`הקרדיטים עודכנו ל-${val}`);
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, credits: val } : u)));

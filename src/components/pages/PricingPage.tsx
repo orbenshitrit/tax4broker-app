@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function PricingPage({ navigate }: Props) {
-  const { refreshUserData } = useAuth();
+  const { refreshUserData, getToken } = useAuth();
   const [quantities, setQuantities] = useState<Record<number, number>>({ 1: 1, 2: 1, 3: 1 });
   const [loading, setLoading] = useState<number | null>(null);
   const [success, setSuccess] = useState("");
@@ -30,9 +30,11 @@ export default function PricingPage({ navigate }: Props) {
     setError("");
     setSuccess("");
     try {
+      const token = await getToken();
       await apiFetch("/api/credits/purchase", {
         method: "POST",
         body: JSON.stringify({ plan_id: plan.id, quantity: qty }),
+        token,
       });
       const totalCredits = plan.credits * qty;
       setSuccess(

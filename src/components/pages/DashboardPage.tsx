@@ -32,11 +32,13 @@ function LeadDialog({
   onClose,
   taxSaved,
   userEmail,
+  getToken,
 }: {
   open: boolean;
   onClose: () => void;
   taxSaved: number;
   userEmail: string;
+  getToken: () => Promise<string>;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -49,9 +51,11 @@ function LeadDialog({
   const submit = async () => {
     setLoading(true);
     try {
+      const token = await getToken();
       await apiFetch("/api/leads", {
         method: "POST",
         body: JSON.stringify({ name, email, phone, tax_saved: taxSaved, source: "free_check", userEmail }),
+        token,
       });
       setDone(true);
     } catch {
@@ -89,7 +93,7 @@ function LeadDialog({
 
 /* ---------- Dashboard ---------- */
 export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: Props) {
-  const { user, userData, logout, refreshUserData } = useAuth();
+  const { user, userData, logout, refreshUserData, getToken } = useAuth();
   const credits = userData?.credits ?? 0;
 
   const [showFreeCheck, setShowFreeCheck] = useState(false);
@@ -106,7 +110,8 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiFetch<ReportMeta[]>("/api/reports/history");
+        const token = await getToken();
+        const data = await apiFetch<ReportMeta[]>("/api/reports/history", { token });
         setHistory(data);
       } catch {
         /* ignore */
@@ -126,7 +131,8 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
       const fd = new FormData();
       fd.append("trades_file", tradesFile);
       if (dividendsFile) fd.append("dividends_file", dividendsFile);
-      const res = await apiFetch<{ tax_saved: number }>("/api/reports/free-check", { method: "POST", body: fd });
+      const token = await getToken();
+      const res = await apiFetch<{ tax_saved: number }>("/api/reports/free-check", { method: "POST", body: fd, token });
       setFreeCheckResult(res.tax_saved);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "שגיאה בחישוב");
@@ -295,6 +301,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         onClose={() => setLeadOpen(false)}
         taxSaved={freeCheckResult ?? 0}
         userEmail={user?.email ?? ""}
+        getToken={getToken}
       />
     </div>
   );
