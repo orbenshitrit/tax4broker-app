@@ -86,9 +86,6 @@ function Annex1322Dialog({
   const [relatedPurchase, setRelatedPurchase] = useState("לא");
   const [reit, setReit] = useState("לא");
   const [taxWithheld, setTaxWithheld] = useState("לא");
-  const [carryoverLosses, setCarryoverLosses] = useState("0");
-  const [nonSecLosses, setNonSecLosses] = useState("0");
-  const [businessLosses, setBusinessLosses] = useState("0");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -98,13 +95,6 @@ function Annex1322Dialog({
     setError("");
     if (!sellerName.trim()) { setError("נא להזין שם מוכר"); return; }
     if (!fileNumber.trim()) { setError("נא להזין מספר תיק הלקוח"); return; }
-
-    const numCarry = parseFloat(carryoverLosses);
-    const numNonSec = parseFloat(nonSecLosses);
-    const numBusiness = parseFloat(businessLosses);
-    if (isNaN(numCarry)) { setError("ערך לא תקין עבור הפסדי הון מועברים"); return; }
-    if (isNaN(numNonSec)) { setError("ערך לא תקין עבור קיזוז הפסדי הון שאינם מניירות ערך"); return; }
-    if (isNaN(numBusiness)) { setError("ערך לא תקין עבור קיזוז הפסדים שוטפים מעסק"); return; }
 
     setLoading(true);
     try {
@@ -119,9 +109,6 @@ function Annex1322Dialog({
         purchase_from_related_party: relatedPurchase === "כן",
         reit_profit: reit === "כן",
         tax_withheld: taxWithheld === "כן",
-        carryover_losses: numCarry,
-        offset_non_securities: numNonSec,
-        offset_business_losses: numBusiness,
         sales_profit_h1: reportOutputs.sales_profit_h1 ?? 0,
         losses_h1: reportOutputs.losses_h1 ?? 0,
         proceeds_h1: reportOutputs.proceeds_h1 ?? 0,
@@ -242,24 +229,6 @@ function Annex1322Dialog({
           <RadioGroup label="רכישה מצד קשור" value={relatedPurchase} onChange={setRelatedPurchase} />
           <RadioGroup label="האם הרווח הוא מקרן השקעות במקרקעין" value={reit} onChange={setReit} />
           <RadioGroup label="נוכה מס במקור" value={taxWithheld} onChange={setTaxWithheld} />
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-secondary">
-              הפסדי הון מועברים מניירות ערך (0 = אין)
-            </label>
-            <input className="input" type="number" value={carryoverLosses} onChange={(e) => setCarryoverLosses(e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-secondary">
-              קיזוז הפסדי הון שאינם מניירות ערך (0 = אין)
-            </label>
-            <input className="input" type="number" value={nonSecLosses} onChange={(e) => setNonSecLosses(e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-secondary">
-              קיזוז הפסדים שוטפים מעסק (0 = אין)
-            </label>
-            <input className="input" type="number" value={businessLosses} onChange={(e) => setBusinessLosses(e.target.value)} />
-          </div>
         </div>
 
         <button className="btn-primary mt-5 w-full" onClick={submit} disabled={loading}>
