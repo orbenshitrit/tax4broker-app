@@ -28,6 +28,7 @@ interface ReportFile {
 }
 
 interface ReportOutputs {
+  report_id?: string;
   client_name: string;
   account_id: string;
   year: number;
@@ -108,6 +109,7 @@ function Annex1322Dialog({
     setLoading(true);
     try {
       const body = {
+        report_id: reportOutputs.report_id || null,
         report_year: year,
         seller_name: sellerName,
         client_file_number: fileNumber,
@@ -316,7 +318,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setError("");
     try {
       // Download files from backend for each known key
-      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b"];
+      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "annex_1322_pdf", "annex_1322_pdf_h2"];
       const downloadedFiles: Record<string, ReportFile> = {};
       for (const key of fileKeys) {
         try {
@@ -331,15 +333,18 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
             reader.readAsDataURL(blob);
           });
+          const isPdf = key.includes("pdf");
           const labels: Record<string, string> = {
             main_excel: `📗 דוח ראשי — ${selectedReport.fileName || "report"}.xlsx`,
             ref_excel_a: `📙 אסמכתה ל-1325 א`,
             ref_excel_b: `📙 אסמכתה ל-1325 ב`,
+            annex_1322_pdf: `📄 טופס 1322 — ינואר–יוני`,
+            annex_1322_pdf_h2: `📄 טופס 1322 — יולי–דצמבר`,
           };
           downloadedFiles[key] = {
             data: base64,
-            name: `${key}_${selectedReport.clientName}.xlsx`,
-            mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            name: isPdf ? `${key}_${selectedReport.clientName}.pdf` : `${key}_${selectedReport.clientName}.xlsx`,
+            mime: isPdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             label: labels[key] || key,
           };
         } catch {
