@@ -355,6 +355,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
         setError("לא נמצאו קבצים שמורים בדוח זה.");
       } else {
         setOutputs({
+          report_id: selectedReport.id,
           client_name: selectedReport.clientName,
           account_id: selectedReport.accountId,
           year: selectedReport.year,
