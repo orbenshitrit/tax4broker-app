@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import AccessibilityWidget from "@/components/AccessibilityWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="he" dir="rtl">
       <body className={`${inter.variable} bg-surface font-sans text-ink antialiased`}>
         {children}
+        <AccessibilityWidget />
       </body>
     </html>
   );

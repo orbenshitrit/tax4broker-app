@@ -312,6 +312,16 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         userEmail={user?.email ?? ""}
         getToken={getToken}
       />
+
+      {/* Footer – terms link */}
+      <div className="mt-12 border-t border-edge pt-6 text-center">
+        <button
+          onClick={() => navigate("terms")}
+          className="text-xs text-ink-tertiary underline transition-colors hover:text-ink"
+        >
+          תקנון אתר ותנאי שימוש
+        </button>
+      </div>
     </div>
   );
 }

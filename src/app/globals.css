@@ -288,3 +288,33 @@ body {
     padding-bottom: 0;
   }
 }
+
+/* ── Accessibility (Israeli Standard 5568) ── */
+.a11y-high-contrast {
+  filter: contrast(1.4);
+}
+.a11y-inverted {
+  filter: invert(1) hue-rotate(180deg);
+}
+.a11y-inverted img,
+.a11y-inverted video {
+  filter: invert(1) hue-rotate(180deg);
+}
+.a11y-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+.a11y-no-animations *,
+.a11y-no-animations *::before,
+.a11y-no-animations *::after {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+.a11y-readable-font * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0.03em;
+}
+.a11y-big-cursor,
+.a11y-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M5 1L5 28L12 21L20 28L20 24L12 17L26 17Z' fill='black' stroke='white' stroke-width='1'/%3E%3C/svg%3E") 4 4, auto !important;
+}

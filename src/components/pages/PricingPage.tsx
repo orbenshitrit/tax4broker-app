@@ -4,14 +4,17 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Page } from "@/components/AppShell";
-import { ArrowRight, Star, CreditCard } from "lucide-react";
+import { ArrowRight, Star, CreditCard, Gift, ExternalLink, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const PLANS = [
   { id: 1, name: "חבילת בסיס", credits: 1, price: 100, popular: false },
-  { id: 2, name: "חבילת פרו",  credits: 10, price: 800, popular: true },
+  { id: 2, name: "חבילת פרו", credits: 10, price: 800, popular: true },
   { id: 3, name: "חבילת משרד", credits: 20, price: 1400, popular: false },
 ];
+
+const BIT_PHONE = "0502551542";
+const BIT_LINK = `https://www.payboxapp.com/?phone=${BIT_PHONE}`;
 
 interface Props {
   navigate: (page: Page) => void;
@@ -19,42 +22,56 @@ interface Props {
 
 export default function PricingPage({ navigate }: Props) {
   const { refreshUserData, getToken } = useAuth();
-  const [quantities, setQuantities] = useState<Record<number, number>>({ 1: 1, 2: 1, 3: 1 });
-  const [loading, setLoading] = useState<number | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const purchase = async (plan: typeof PLANS[0]) => {
-    const qty = quantities[plan.id] || 1;
-    setLoading(plan.id);
+  /* ---- Coupon redemption ---- */
+  const redeemCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
     setError("");
     setSuccess("");
     try {
       const token = await getToken();
-      await apiFetch("/api/credits/purchase", {
-        method: "POST",
-        body: JSON.stringify({ plan_credits: plan.credits, quantity: qty }),
-        token,
-      });
-      const totalCredits = plan.credits * qty;
-      setSuccess(
-        qty > 1
-          ? `✅ נוספו ${totalCredits} קרדיטים (${qty} × ${plan.credits})!`
-          : `✅ נוספו ${totalCredits} קרדיטים!`
+      const res = await apiFetch<{ ok: boolean; credits_added: number; message: string }>(
+        "/api/credits/redeem-coupon",
+        {
+          method: "POST",
+          body: JSON.stringify({ code: couponCode.trim() }),
+          token,
+        }
       );
+      setSuccess(res.message || `✅ נוספו ${res.credits_added} קרדיטים!`);
+      setCouponCode("");
       await refreshUserData();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
-      setError(msg || "שגיאה ברכישה");
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object" && e !== null
+          ? JSON.stringify(e)
+          : String(e);
+      setError(msg || "שגיאה במימוש הקופון");
     } finally {
-      setLoading(null);
+      setCouponLoading(false);
     }
+  };
+
+  /* ---- Bit payment redirect ---- */
+  const openBitPayment = (plan: (typeof PLANS)[0]) => {
+    const url = `${BIT_LINK}&amount=${plan.price}&description=${encodeURIComponent(plan.name + " - Tax4Broker")}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Back */}
-      <button className="btn-secondary mb-4 flex items-center gap-1.5 text-sm" onClick={() => navigate("dashboard")}>
+      <button
+        className="btn-secondary mb-4 flex items-center gap-1.5 text-sm"
+        onClick={() => navigate("dashboard")}
+      >
         <ArrowRight className="h-4 w-4" /> חזרה לדשבורד
       </button>
 
@@ -68,7 +85,8 @@ export default function PricingPage({ navigate }: Props) {
 
       {/* Messages */}
       {success && (
-        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-center text-sm text-green-600">
+        <div className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-center text-sm text-green-600">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           {success}
         </div>
       )}
@@ -102,34 +120,70 @@ export default function PricingPage({ navigate }: Props) {
               ₪{plan.price.toLocaleString("he-IL")}
             </p>
 
-            <p className="mt-1 text-sm font-medium text-ink-tertiary">{plan.credits} דוחות</p>
+            <p className="mt-1 text-sm font-medium text-ink-tertiary">
+              {plan.credits} {plan.credits === 1 ? "דוח" : "דוחות"}
+            </p>
 
             <div className="mt-auto pt-5">
-              <div className="mb-3">
-                <label className="mb-1 block text-xs text-ink-tertiary">כמות</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={quantities[plan.id]}
-                  onChange={(e) =>
-                    setQuantities((q) => ({ ...q, [plan.id]: Math.max(1, parseInt(e.target.value) || 1) }))
-                  }
-                  className="input text-center"
-                />
-              </div>
               <button
-                className={`w-full py-2.5 text-sm font-medium ${plan.popular ? "btn-primary" : "btn-secondary"}`}
-                onClick={() => purchase(plan)}
-                disabled={loading === plan.id}
+                className={`flex w-full items-center justify-center gap-2 py-2.5 text-sm font-medium ${
+                  plan.popular ? "btn-primary" : "btn-secondary"
+                }`}
+                onClick={() => openBitPayment(plan)}
               >
-                {loading === plan.id
-                  ? "מעבד..."
-                  : `רכוש ${plan.credits * (quantities[plan.id] || 1)} קרדיטים`}
+                <ExternalLink className="h-4 w-4" />
+                שלם ב-Bit
               </button>
+              <p className="mt-2 text-center text-[11px] text-ink-tertiary">
+                לאחר התשלום תקבל קוד קופון
+              </p>
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Coupon Code Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="card mt-8 p-6"
+      >
+        <h2 className="mb-1 flex items-center gap-2 text-base font-semibold text-ink">
+          <Gift className="h-5 w-5" /> קוד קופון
+        </h2>
+        <p className="mb-4 text-xs text-ink-tertiary">
+          קיבלת קוד קופון? הזן אותו כאן כדי לקבל קרדיטים
+        </p>
+
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            placeholder="הזן קוד קופון"
+            className="input flex-1 text-center font-mono tracking-widest"
+            dir="ltr"
+            onKeyDown={(e) => e.key === "Enter" && redeemCoupon()}
+          />
+          <button
+            className="btn-primary whitespace-nowrap px-6 text-sm"
+            onClick={redeemCoupon}
+            disabled={couponLoading || !couponCode.trim()}
+          >
+            {couponLoading ? "מאמת..." : "מימוש"}
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Payment info */}
+      <div className="mt-6 text-center text-xs text-ink-tertiary">
+        <p>
+          לתמיכה בתשלום:{" "}
+          <a href={`tel:+972${BIT_PHONE.slice(1)}`} className="underline">
+            {BIT_PHONE}
+          </a>
+        </p>
       </div>
     </div>
   );

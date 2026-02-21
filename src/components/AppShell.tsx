@@ -6,9 +6,10 @@ import DashboardPage from "@/components/pages/DashboardPage";
 import ReportGeneratorPage from "@/components/pages/ReportGeneratorPage";
 import PricingPage from "@/components/pages/PricingPage";
 import AdminPage from "@/components/pages/AdminPage";
+import TermsPage from "@/components/pages/TermsPage";
 import { motion, AnimatePresence } from "framer-motion";
 
-export type Page = "dashboard" | "generator" | "pricing" | "admin";
+export type Page = "dashboard" | "generator" | "pricing" | "admin" | "terms";
 
 export interface ReportMeta {
   id: string;
@@ -64,6 +65,7 @@ export default function AppShell() {
         )}
         {page === "pricing" && <PricingPage navigate={navigate} />}
         {page === "admin" && <AdminPage navigate={navigate} />}
+        {page === "terms" && <TermsPage onBack={() => navigate("dashboard")} />}
       </motion.div>
     </AnimatePresence>
   );
