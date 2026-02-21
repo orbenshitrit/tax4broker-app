@@ -14,6 +14,7 @@ import {
   Beaker,
   Upload,
   FileSpreadsheet,
+  Home,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import GuidePage from "@/components/pages/GuidePage";
@@ -180,6 +181,12 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
               <Shield className="h-3.5 w-3.5" /> ניהול
             </button>
           )}
+          <a
+            href="https://tax4broker.vercel.app/"
+            className="btn-secondary flex items-center gap-1.5 text-xs"
+          >
+            <Home className="h-3.5 w-3.5" /> אתר הבית
+          </a>
           <button className="btn-secondary flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600" onClick={logout}>
             <LogOut className="h-3.5 w-3.5" /> יציאה
           </button>
