@@ -135,11 +135,12 @@ function Annex1322Dialog({
         };
       }
       if (raw.h2_pdf_b64) {
+        const isFullYear = !raw.h1_pdf_b64;
         annexFiles.annex_1322_pdf_h2 = {
           data: raw.h2_pdf_b64,
           name: raw.h2_name || "טופס_1322_H2.pdf",
           mime: "application/pdf",
-          label: "📄 טופס 1322 — יולי–דצמבר",
+          label: isFullYear ? "📄 טופס 1322 — שנתי" : "📄 טופס 1322 — יולי–דצמבר",
         };
       }
       onAnnexGenerated(annexFiles);
@@ -287,7 +288,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setError("");
     try {
       // Download files from backend for each known key
-      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "annex_1322_pdf", "annex_1322_pdf_h2"];
+      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "ref_excel_combined", "annex_1322_pdf", "annex_1322_pdf_h2"];
       const downloadedFiles: Record<string, ReportFile> = {};
       for (const key of fileKeys) {
         try {
@@ -307,6 +308,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             main_excel: `📗 דוח ראשי — ${selectedReport.fileName || "report"}.xlsx`,
             ref_excel_a: `📙 אסמכתה ל-1325 א`,
             ref_excel_b: `📙 אסמכתה ל-1325 ב`,
+            ref_excel_combined: `📙 אסמכתה שנתית ל-1325`,
             annex_1322_pdf: `📄 טופס 1322 — ינואר–יוני`,
             annex_1322_pdf_h2: `📄 טופס 1322 — יולי–דצמבר`,
           };
@@ -377,6 +379,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           main_excel: `📗 דוח ראשי — ${raw.client_name}.xlsx`,
           ref_excel_a: "📙 אסמכתה ל-1325 א",
           ref_excel_b: "📙 אסמכתה ל-1325 ב",
+          ref_excel_combined: "📙 אסמכתה שנתית ל-1325",
         };
         for (const [key, f] of Object.entries(raw.files) as [string, any][]) {
           files[key] = {
@@ -474,6 +477,9 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             )}
             {files.ref_excel_b && (
               <DownloadBtn file={files.ref_excel_b} icon={<Download className="h-4 w-4" />} />
+            )}
+            {files.ref_excel_combined && (
+              <DownloadBtn file={files.ref_excel_combined} icon={<Download className="h-4 w-4" />} />
             )}
           </div>
 
