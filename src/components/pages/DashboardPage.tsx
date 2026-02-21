@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import GuidePage from "@/components/pages/GuidePage";
 
 const WHATSAPP_LINK =
   "https://api.whatsapp.com/send?phone=972502551542&text=%D7%94%D7%99%D7%99+%D7%90%D7%A0%D7%99+%D7%9E%D7%AA%D7%A2%D7%A0%D7%99%D7%99%D7%9F+%D7%91%D7%A9%D7%99%D7%A8%D7%95%D7%AA+TAX4BROKER";
@@ -249,6 +250,11 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
             )}
           </motion.div>
         )}
+      </div>
+
+      {/* ---- Guide ---- */}
+      <div className="mb-6">
+        <GuidePage />
       </div>
 
       {/* ---- Report History ---- */}

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import GuidePage from "@/components/pages/GuidePage";
 
 /* ---- Types ---- */
 interface ReportFile {
@@ -561,6 +562,11 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
         <FileSpreadsheet className="mb-1 inline h-6 w-6 text-ink" /> הפקת דוח מס חדש
       </h1>
 
+      {/* Guide */}
+      <div className="mb-6">
+        <GuidePage />
+      </div>
+
       {/* Restore mode */}
       {selectedReport && (
         <div className="card mb-6 border-edge bg-surface-muted p-4">
@@ -696,56 +702,66 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
       <AnimatePresence>
         {showTermsModal && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowTermsModal(false)}
           >
             <motion.div
-              className="relative mx-4 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-edge bg-surface p-6 shadow-xl"
+              className="relative mx-4 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-edge bg-surface shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               dir="rtl"
             >
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="absolute left-3 top-3 rounded-full p-1.5 hover:bg-surface-muted"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              {/* Sticky header */}
+              <div className="flex items-center justify-between border-b border-edge px-6 py-4">
+                <h2 className="text-lg font-bold text-ink">תנאי שימוש והגבלת אחריות</h2>
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="rounded-full p-1.5 hover:bg-surface-muted"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-              <h2 className="mb-4 text-lg font-bold text-ink">תנאי שימוש והגבלת אחריות</h2>
-              <div className="space-y-4 text-xs leading-relaxed text-ink-secondary">
-                <div>
-                  <h3 className="mb-1 font-semibold text-ink">1. מהות השירות</h3>
-                  <p>המערכת, לרבות כל מחשבון, פלט, או כלי עזר להפקת טפסי 1322, 1325 ודוחות מס אחרים (להלן: &quot;השירות&quot;), מסופקת ככלי עזר טכני-חישובי בלבד לצורך נוחות המשתמש. השימוש בשירות אינו יוצר יחסי רואה חשבון-לקוח, יחסי יועץ מס-לקוח או יחסי נאמנות מכל סוג שהוא בין מפעילי האתר לבין המשתמש. התוצאות אינן חוות דעת מקצועית, ייעוץ מס, ייעוץ פיננסי, ואינן תחליף לבחינה פרטנית ע&quot;י איש מקצוע מוסמך.</p>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-semibold text-ink">2. אספקה &quot;כמות שהוא&quot; (AS-IS)</h3>
-                  <p>השירות ניתן &quot;AS-IS&quot; ו-&quot;AS-AVAILABLE&quot;. מפעילי האתר אינם מתחייבים כי המערכת נקייה מטעויות, באגים, שגיאות עיבוד או אי-דיוקים. מפעילי האתר מסירים מעצמם כל אחריות, מפורשת או משתמעת. דיני המס, התקנות והפסיקה משתנים מעת לעת ואין התחייבות לעדכניות.</p>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-semibold text-ink">3. אחריות המשתמש</h3>
-                  <p>המשתמש נושא באחריות הבלעדית, המלאה והמוחלטת לכל נתון המוזן למערכת ולכל פלט המופק ממנה. המשתמש מצהיר כי: (א) כל הנתונים הנוגעים להפסדים מועברים הוזנו במלואם ובמדויק; (ב) המשתמש לא היה &quot;בעל שליטה&quot; (10% או יותר מאמצעי השליטה) באף אחת מהחברות הרלוונטיות; (ג) כל ניירות הערך המוזנים נרכשו מ-01/01/2006 ואילך.</p>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-semibold text-ink">4. הגבלת חבות</h3>
-                  <p>בשום מקרה לא יישאו מפעילי האתר, מפתחיו, מנהליו, עובדיו או מי מטעמם, באחריות לכל נזק ישיר, עקיף, תוצאתי, עונשי, אגבי או מיוחד, לרבות הפסד כספי, תשלום מס ביתר, קנסות וכד&apos;. סך האחריות המקסימלית לא תעלה על הסכום ששולם עבור השירות ב-12 החודשים האחרונים.</p>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-semibold text-ink">5. שיפוי</h3>
-                  <p>המשתמש מתחייב לשפות, להגן ולפצות את מפעילי האתר בגין כל נזק, הפסד, חבות, דרישה או הוצאה שייגרמו כתוצאה מדרישה או תביעה של צד שלישי (לרבות רשות המיסים) הנובעת משימוש המשתמש במערכת.</p>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="space-y-4 text-xs leading-relaxed text-ink-secondary">
+                  <div>
+                    <h3 className="mb-1 font-semibold text-ink">1. מהות השירות</h3>
+                    <p>המערכת, לרבות כל מחשבון, פלט, או כלי עזר להפקת טפסי 1322, 1325 ודוחות מס אחרים (להלן: &quot;השירות&quot;), מסופקת ככלי עזר טכני-חישובי בלבד לצורך נוחות המשתמש. השימוש בשירות אינו יוצר יחסי רואה חשבון-לקוח, יחסי יועץ מס-לקוח או יחסי נאמנות מכל סוג שהוא בין מפעילי האתר לבין המשתמש. התוצאות אינן חוות דעת מקצועית, ייעוץ מס, ייעוץ פיננסי, ואינן תחליף לבחינה פרטנית ע&quot;י איש מקצוע מוסמך.</p>
+                  </div>
+                  <div>
+                    <h3 className="mb-1 font-semibold text-ink">2. אספקה &quot;כמות שהוא&quot; (AS-IS)</h3>
+                    <p>השירות ניתן &quot;AS-IS&quot; ו-&quot;AS-AVAILABLE&quot;. מפעילי האתר אינם מתחייבים כי המערכת נקייה מטעויות, באגים, שגיאות עיבוד או אי-דיוקים. מפעילי האתר מסירים מעצמם כל אחריות, מפורשת או משתמעת. דיני המס, התקנות והפסיקה משתנים מעת לעת ואין התחייבות לעדכניות.</p>
+                  </div>
+                  <div>
+                    <h3 className="mb-1 font-semibold text-ink">3. אחריות המשתמש</h3>
+                    <p>המשתמש נושא באחריות הבלעדית, המלאה והמוחלטת לכל נתון המוזן למערכת ולכל פלט המופק ממנה. המשתמש מצהיר כי: (א) כל הנתונים הנוגעים להפסדים מועברים הוזנו במלואם ובמדויק; (ב) המשתמש לא היה &quot;בעל שליטה&quot; (10% או יותר מאמצעי השליטה) באף אחת מהחברות הרלוונטיות; (ג) כל ניירות הערך המוזנים נרכשו מ-01/01/2006 ואילך.</p>
+                  </div>
+                  <div>
+                    <h3 className="mb-1 font-semibold text-ink">4. הגבלת חבות</h3>
+                    <p>בשום מקרה לא יישאו מפעילי האתר, מפתחיו, מנהליו, עובדיו או מי מטעמם, באחריות לכל נזק ישיר, עקיף, תוצאתי, עונשי, אגבי או מיוחד, לרבות הפסד כספי, תשלום מס ביתר, קנסות וכד&apos;. סך האחריות המקסימלית לא תעלה על הסכום ששולם עבור השירות ב-12 החודשים האחרונים.</p>
+                  </div>
+                  <div>
+                    <h3 className="mb-1 font-semibold text-ink">5. שיפוי</h3>
+                    <p>המשתמש מתחייב לשפות, להגן ולפצות את מפעילי האתר בגין כל נזק, הפסד, חבות, דרישה או הוצאה שייגרמו כתוצאה מדרישה או תביעה של צד שלישי (לרבות רשות המיסים) הנובעת משימוש המשתמש במערכת.</p>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="btn-primary mt-6 w-full py-2.5 text-sm"
-              >
-                סגור
-              </button>
+
+              {/* Sticky footer */}
+              <div className="border-t border-edge px-6 py-4">
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="btn-primary w-full py-2.5 text-sm"
+                >
+                  סגור
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
