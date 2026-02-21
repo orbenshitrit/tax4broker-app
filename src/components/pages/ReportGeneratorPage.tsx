@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
-  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -305,9 +304,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
   const [outputs, setOutputs] = useState<ReportOutputs | null>(null);
   const [annexOpen, setAnnexOpen] = useState(false);
   const [annexShown, setAnnexShown] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailError, setEmailError] = useState("");
   const [restoring, setRestoring] = useState(false);
 
   /* ---- Restore handler ---- */
@@ -438,36 +434,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     }
   }, [outputs, annexShown, annexOpen]);
 
-  /* ---- Send files by email ---- */
-  const sendEmail = useCallback(async () => {
-    if (!outputs) return;
-    setEmailSending(true);
-    setEmailError("");
-    setEmailSent(false);
-    try {
-      const token = await getToken();
-      const filesToSend = Object.values(outputs.files)
-        .filter((f) => f.data)
-        .map((f) => ({ data: f.data, name: f.name, mime: f.mime }));
-
-      await apiFetch("/api/reports/send-email", {
-        method: "POST",
-        token,
-        body: JSON.stringify({
-          client_name: outputs.client_name,
-          year: outputs.year,
-          account_id: outputs.account_id,
-          files: filesToSend,
-        }),
-      });
-      setEmailSent(true);
-    } catch (e: unknown) {
-      setEmailError(e instanceof Error ? e.message : "שגיאה בשליחת המייל");
-    } finally {
-      setEmailSending(false);
-    }
-  }, [outputs]);
-
   /* ---- New Report ---- */
   const newReport = () => {
     setOutputs(null);
@@ -476,8 +442,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setError("");
     setProgress(0);
     setAnnexShown(false);
-    setEmailSent(false);
-    setEmailError("");
     clearSelectedReport();
   };
 
@@ -556,39 +520,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
               {files.annex_1322_pdf_h2 && (
                 <DownloadBtn file={files.annex_1322_pdf_h2} icon={<Download className="h-4 w-4" />} />
               )}
-            </div>
-          )}
-        </div>
-
-        {/* Send email */}
-        <div className="mt-4">
-          {emailSent ? (
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-              <CheckCircle2 className="h-4 w-4" />
-              הקבצים נשלחו למייל שלך בהצלחה
-            </div>
-          ) : (
-            <button
-              className="btn-secondary w-full py-3 flex items-center justify-center gap-2"
-              onClick={sendEmail}
-              disabled={emailSending}
-            >
-              {emailSending ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent" />
-                  שולח למייל...
-                </>
-              ) : (
-                <>
-                  <Mail className="h-4 w-4" />
-                  📧 שלח את כל הקבצים למייל
-                </>
-              )}
-            </button>
-          )}
-          {emailError && (
-            <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600">
-              {emailError}
             </div>
           )}
         </div>
