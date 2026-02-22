@@ -1244,7 +1244,7 @@ function AdminsTab({
 
 /* ═══════════════════ Distributors Tab ═══════════════════ */
 
-function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>; flash: (m: string) => void }) {
+function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>; flash: (type: "success" | "error", msg: string) => void }) {
   const [distributors, setDistributors] = useState<DistributorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -1287,11 +1287,11 @@ function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>;
           commission_pct: parseFloat(newCommission) || 0,
         },
       });
-      flash("מפיץ נוסף בהצלחה");
+      flash("success", "מפיץ נוסף בהצלחה");
       setNewName(""); setNewEmail(""); setNewPhone(""); setNewCommission("0");
       setShowAdd(false);
       await fetchDistributors();
-    } catch { flash("שגיאה"); }
+    } catch { flash("error", "שגיאה"); }
     finally { setSaving(false); }
   };
 
@@ -1303,10 +1303,10 @@ function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>;
         method: "PUT",
         body: { commission_pct: parseFloat(editPct) || 0 },
       });
-      flash("אחוז תגמול עודכן");
+      flash("success", "אחוז תגמול עודכן");
       setEditId(null);
       await fetchDistributors();
-    } catch { flash("שגיאה"); }
+    } catch { flash("error", "שגיאה"); }
   };
 
   const handleDelete = async (id: string) => {
@@ -1314,14 +1314,14 @@ function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>;
     try {
       const token = await getToken();
       await apiFetch(`/api/distributors/${id}`, { token, method: "DELETE" });
-      flash("מפיץ נמחק");
+      flash("success", "מפיץ נמחק");
       await fetchDistributors();
-    } catch { flash("שגיאה"); }
+    } catch { flash("error", "שגיאה"); }
   };
 
   const copyLink = (tok: string) => {
     navigator.clipboard.writeText(`https://app.tax4broker.com/free-check/${tok}`);
-    flash("קישור הועתק");
+    flash("success", "קישור הועתק");
   };
 
   const filtered = distributors.filter(
