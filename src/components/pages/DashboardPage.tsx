@@ -199,6 +199,15 @@ function ShareDialog({
 }) {
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  // 1322 personal details
+  const [clientFileNumber, setClientFileNumber] = useState("");
+  const [ownership, setOwnership] = useState(true);
+  const [acquiredPreMarriage, setAcquiredPreMarriage] = useState(false);
+  const [relatedPartySale, setRelatedPartySale] = useState(false);
+  const [purchaseFromRelated, setPurchaseFromRelated] = useState(false);
+  const [reitProfit, setReitProfit] = useState(false);
+  const [taxWithheld, setTaxWithheld] = useState(false);
+  const [clientPhone, setClientPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ whatsapp_url: string; upload_url: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -207,7 +216,7 @@ function ShareDialog({
   if (!open) return null;
 
   const handleCreate = async () => {
-    if (!clientName.trim()) return;
+    if (!clientName.trim() || !clientFileNumber.trim()) return;
     setLoading(true);
     setError("");
     try {
@@ -216,7 +225,17 @@ function ShareDialog({
         "/api/share/create",
         {
           method: "POST",
-          body: JSON.stringify({ client_name: clientName, client_phone: clientPhone }),
+          body: JSON.stringify({
+            client_name: clientName,
+            client_phone: clientPhone,
+            client_file_number: clientFileNumber,
+            ownership,
+            acquired_pre_marriage: acquiredPreMarriage,
+            related_party_sale: relatedPartySale,
+            purchase_from_related_party: purchaseFromRelated,
+            reit_profit: reitProfit,
+            tax_withheld: taxWithheld,
+          }),
           token,
         }
       );
@@ -239,6 +258,13 @@ function ShareDialog({
   const handleClose = () => {
     setClientName("");
     setClientPhone("");
+    setClientFileNumber("");
+    setOwnership(true);
+    setAcquiredPreMarriage(false);
+    setRelatedPartySale(false);
+    setPurchaseFromRelated(false);
+    setReitProfit(false);
+    setTaxWithheld(false);
     setResult(null);
     setError("");
     onClose();
@@ -255,28 +281,106 @@ function ShareDialog({
         <h3 className="mb-4 text-lg font-semibold text-ink">שתף ללקוח</h3>
 
         {!result ? (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
             <p className="text-xs text-ink-tertiary">
-              צור קישור ייחודי ללקוח. הלקוח יעלה את הקבצים והדוח יישלח אליך במייל.
+              מלא את פרטי הלקוח לטופס 1322 וצור קישור להעלאת קבצים.
             </p>
-            <input
-              className="input"
-              placeholder="שם הלקוח *"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="טלפון הלקוח (לשליחה בוואטסאפ)"
-              value={clientPhone}
-              onChange={(e) => setClientPhone(e.target.value)}
-              dir="ltr"
-            />
+
+            {/* Basic info */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-ink">פרטי לקוח</p>
+              <input
+                className="input"
+                placeholder="שם הלקוח *"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
+              <input
+                className="input"
+                placeholder="מספר תיק / ת.ז *"
+                value={clientFileNumber}
+                onChange={(e) => setClientFileNumber(e.target.value)}
+                dir="ltr"
+              />
+              <input
+                className="input"
+                placeholder="טלפון הלקוח (לשליחה בוואטסאפ)"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                dir="ltr"
+              />
+            </div>
+
+            {/* 1322 checkbox fields */}
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-surface-subtle p-3">
+              <p className="text-xs font-semibold text-ink">הגדרות נספח 1322</p>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={ownership}
+                  onChange={(e) => setOwnership(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                בבעלותי (אם לא מסומן — בן/בת זוג)
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={acquiredPreMarriage}
+                  onChange={(e) => setAcquiredPreMarriage(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                נרכש לפני הנישואין / בירושה
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={relatedPartySale}
+                  onChange={(e) => setRelatedPartySale(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                מכירה לצד קשור
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={purchaseFromRelated}
+                  onChange={(e) => setPurchaseFromRelated(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                רכישה מצד קשור
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={reitProfit}
+                  onChange={(e) => setReitProfit(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                רווח מקרן השקעות במקרקעין
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-ink-secondary">
+                <input
+                  type="checkbox"
+                  checked={taxWithheld}
+                  onChange={(e) => setTaxWithheld(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                />
+                נוכה מס במקור
+              </label>
+            </div>
+
             {error && <p className="text-center text-sm text-red-500">{error}</p>}
             <button
               className="btn-primary w-full flex items-center justify-center gap-2"
               onClick={handleCreate}
-              disabled={loading || !clientName.trim()}
+              disabled={loading || !clientName.trim() || !clientFileNumber.trim()}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
               {loading ? "יוצר..." : "צור קישור"}
