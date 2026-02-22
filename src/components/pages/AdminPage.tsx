@@ -32,6 +32,9 @@ import {
   Settings,
   Eye,
   Beaker,
+  Megaphone,
+  Link2,
+  Phone,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -75,7 +78,21 @@ interface ReportRow {
   reportPeriod: string;
 }
 
-type AdminTab = "dashboard" | "users" | "coupons" | "seo" | "content" | "admins" | "free-checks";
+interface DistributorRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  commission_pct: number;
+  token: string;
+  status: string;
+  created_at: string;
+  leads_count: number;
+  total_saved: number;
+  commission_amount: number;
+}
+
+type AdminTab = "dashboard" | "users" | "coupons" | "seo" | "content" | "admins" | "free-checks" | "distributors";
 
 interface Props {
   navigate: (page: Page) => void;
@@ -191,6 +208,7 @@ export default function AdminPage({ navigate }: Props) {
         <TabButton active={tab === "seo"} onClick={() => setTab("seo")} icon={<Globe className="h-3.5 w-3.5" />} label="SEO" />
         <TabButton active={tab === "content"} onClick={() => setTab("content")} icon={<FileText className="h-3.5 w-3.5" />} label="תוכן" />
         <TabButton active={tab === "free-checks"} onClick={() => setTab("free-checks")} icon={<Beaker className="h-3.5 w-3.5" />} label="בדיקה חינמית" />
+        <TabButton active={tab === "distributors"} onClick={() => setTab("distributors")} icon={<Megaphone className="h-3.5 w-3.5" />} label="מפיצים" />
         {isSuperAdmin && (
           <TabButton active={tab === "admins"} onClick={() => setTab("admins")} icon={<Shield className="h-3.5 w-3.5" />} label="הרשאות" />
         )}
@@ -204,6 +222,7 @@ export default function AdminPage({ navigate }: Props) {
       {tab === "content" && <ContentTab getToken={getToken} flash={flash} />}
       {tab === "admins" && isSuperAdmin && <AdminsTab getToken={getToken} flash={flash} />}
       {tab === "free-checks" && <FreeCheckLeadsTab getToken={getToken} />}
+      {tab === "distributors" && <DistributorsTab getToken={getToken} flash={flash} />}
     </div>
   );
 }
@@ -1223,6 +1242,250 @@ function AdminsTab({
 }
 
 
+/* ═══════════════════ Distributors Tab ═══════════════════ */
+
+function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>; flash: (m: string) => void }) {
+  const [distributors, setDistributors] = useState<DistributorRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Add form
+  const [showAdd, setShowAdd] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newCommission, setNewCommission] = useState("0");
+  const [saving, setSaving] = useState(false);
+
+  // Edit commission
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editPct, setEditPct] = useState("");
+
+  const fetchDistributors = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ distributors: DistributorRow[] }>("/api/distributors", { token });
+      setDistributors(res.distributors ?? []);
+    } catch { /* */ }
+    finally { setLoading(false); }
+  }, [getToken]);
+
+  useEffect(() => { fetchDistributors(); }, [fetchDistributors]);
+
+  const handleAdd = async () => {
+    if (!newName.trim() || !newEmail.trim()) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      await apiFetch("/api/distributors", {
+        token,
+        method: "POST",
+        body: {
+          name: newName.trim(),
+          email: newEmail.trim(),
+          phone: newPhone.trim(),
+          commission_pct: parseFloat(newCommission) || 0,
+        },
+      });
+      flash("מפיץ נוסף בהצלחה");
+      setNewName(""); setNewEmail(""); setNewPhone(""); setNewCommission("0");
+      setShowAdd(false);
+      await fetchDistributors();
+    } catch { flash("שגיאה"); }
+    finally { setSaving(false); }
+  };
+
+  const handleUpdateCommission = async (id: string) => {
+    try {
+      const token = await getToken();
+      await apiFetch(`/api/distributors/${id}`, {
+        token,
+        method: "PUT",
+        body: { commission_pct: parseFloat(editPct) || 0 },
+      });
+      flash("אחוז תגמול עודכן");
+      setEditId(null);
+      await fetchDistributors();
+    } catch { flash("שגיאה"); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("למחוק מפיץ זה?")) return;
+    try {
+      const token = await getToken();
+      await apiFetch(`/api/distributors/${id}`, { token, method: "DELETE" });
+      flash("מפיץ נמחק");
+      await fetchDistributors();
+    } catch { flash("שגיאה"); }
+  };
+
+  const copyLink = (tok: string) => {
+    navigator.clipboard.writeText(`https://app.tax4broker.com/free-check/${tok}`);
+    flash("קישור הועתק");
+  };
+
+  const filtered = distributors.filter(
+    (d) =>
+      d.name.toLowerCase().includes(search.toLowerCase()) ||
+      d.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const grandTotal = filtered.reduce((s, d) => s + d.total_saved, 0);
+  const grandCommission = filtered.reduce((s, d) => s + d.commission_amount, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-base font-semibold text-ink">ניהול מפיצים</h2>
+        <button className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs" onClick={() => setShowAdd(!showAdd)}>
+          <Plus className="h-3.5 w-3.5" /> הוסף מפיץ
+        </button>
+      </div>
+
+      {/* Add Form */}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="card space-y-3 p-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-ink-secondary">שם מפיץ *</label>
+                  <input className="input" placeholder="משה כהן" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-ink-secondary">אימייל *</label>
+                  <input className="input" placeholder="moshe@example.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} dir="ltr" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-ink-secondary">טלפון</label>
+                  <input className="input" placeholder="050-0000000" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} dir="ltr" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-ink-secondary">אחוז תגמול %</label>
+                  <input className="input" type="number" min="0" max="100" step="0.5" placeholder="3" value={newCommission} onChange={(e) => setNewCommission(e.target.value)} dir="ltr" />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button className="btn-secondary px-3 py-1.5 text-xs" onClick={() => setShowAdd(false)}>ביטול</button>
+                <button className="btn-primary px-3 py-1.5 text-xs" onClick={handleAdd} disabled={saving || !newName.trim() || !newEmail.trim()}>
+                  {saving ? "שומר..." : "שמור מפיץ"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-tertiary" />
+        <input className="input pr-9" placeholder="חיפוש לפי שם או אימייל..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
+      {/* Summary */}
+      {filtered.length > 0 && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-xs text-ink-tertiary">סה&quot;כ מפיצים</p>
+              <p className="text-lg font-bold text-ink">{filtered.length}</p>
+            </div>
+            <div>
+              <p className="text-xs text-ink-tertiary">סה&quot;כ לידים</p>
+              <p className="text-lg font-bold text-ink">{filtered.reduce((s, d) => s + d.leads_count, 0)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-left">
+              <p className="text-xs text-ink-tertiary">חיסכון משוער כולל</p>
+              <p className="text-lg font-bold text-emerald-600">₪{grandTotal.toLocaleString("he-IL", { minimumFractionDigits: 2 })}</p>
+            </div>
+            <div className="text-left">
+              <p className="text-xs text-ink-tertiary">תגמול כולל</p>
+              <p className="text-lg font-bold text-purple-600">₪{grandCommission.toLocaleString("he-IL", { minimumFractionDigits: 2 })}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink border-t-transparent" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card p-8 text-center">
+          <Megaphone className="mx-auto mb-2 h-8 w-8 text-ink-tertiary" />
+          <p className="text-sm text-ink-tertiary">{distributors.length === 0 ? "אין מפיצים עדיין" : "לא נמצאו תוצאות"}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((dist) => (
+            <div key={dist.id} className="card p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-ink">{dist.name}</p>
+                    <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+                      {dist.commission_pct}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-ink-tertiary mt-0.5">{dist.email}{dist.phone ? ` · ${dist.phone}` : ""}</p>
+
+                  {/* Stats row */}
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                    <span className="text-ink-secondary"><strong>{dist.leads_count}</strong> לידים</span>
+                    <span className="text-emerald-600">חיסכון: ₪{dist.total_saved.toLocaleString("he-IL", { minimumFractionDigits: 2 })}</span>
+                    <span className="text-purple-600">תגמול: ₪{dist.commission_amount.toLocaleString("he-IL", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button className="btn-secondary flex items-center gap-1 px-2 py-1 text-xs" onClick={() => copyLink(dist.token)} title="העתק קישור">
+                    <Copy className="h-3 w-3" /> קישור
+                  </button>
+
+                  {editId === dist.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        className="input w-16 py-1 text-xs"
+                        type="number" min="0" max="100" step="0.5"
+                        value={editPct}
+                        onChange={(e) => setEditPct(e.target.value)}
+                        dir="ltr"
+                        autoFocus
+                      />
+                      <button className="rounded bg-emerald-600 p-1 text-white hover:bg-emerald-700" onClick={() => handleUpdateCommission(dist.id)}>
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <button className="rounded bg-slate-200 p-1 text-ink hover:bg-slate-300" onClick={() => setEditId(null)}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="btn-secondary flex items-center gap-1 px-2 py-1 text-xs"
+                      onClick={() => { setEditId(dist.id); setEditPct(String(dist.commission_pct)); }}
+                    >
+                      <Percent className="h-3 w-3" /> תגמול
+                    </button>
+                  )}
+
+                  <button className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(dist.id)} title="מחק">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 /* ═══════════════════ Free Check Leads Tab ═══════════════════ */
 
 interface LeadRow {
@@ -1232,49 +1495,82 @@ interface LeadRow {
   client_email: string;
   tax_saved: number;
   created_at: string;
+  distributor_id?: string;
+  distributor_name?: string;
+  source?: string;
 }
 
 function FreeCheckLeadsTab({ getToken }: { getToken: () => Promise<string> }) {
   const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [distributors, setDistributors] = useState<DistributorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterSource, setFilterSource] = useState<string>("all");
 
   useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
-        const res = await apiFetch<{ leads: LeadRow[] }>("/api/free-check-share/leads", { token });
-        setLeads(res.leads ?? []);
+        const [leadsRes, distRes] = await Promise.all([
+          apiFetch<{ leads: LeadRow[] }>("/api/free-check-share/leads", { token }),
+          apiFetch<{ distributors: DistributorRow[] }>("/api/distributors", { token }),
+        ]);
+        setLeads(leadsRes.leads ?? []);
+        setDistributors(distRes.distributors ?? []);
       } catch { /* */ }
       finally { setLoading(false); }
     })();
   }, [getToken]);
 
-  const filtered = leads.filter(
-    (l) =>
+  const filtered = leads.filter((l) => {
+    const matchSearch =
       l.client_name.toLowerCase().includes(search.toLowerCase()) ||
       l.client_email.toLowerCase().includes(search.toLowerCase()) ||
-      l.client_phone.includes(search)
-  );
+      l.client_phone.includes(search);
+
+    if (filterSource === "all") return matchSearch;
+    if (filterSource === "admin") return matchSearch && l.source !== "distributor";
+    return matchSearch && l.distributor_id === filterSource;
+  });
+
+  const totalSaved = filtered.reduce((s, l) => s + l.tax_saved, 0);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-ink">לידים מבדיקה חינמית</h2>
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-          {leads.length} לידים
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+            {filtered.length} לידים
+          </span>
+          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+            ₪{totalSaved.toLocaleString("he-IL", { minimumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-tertiary" />
-        <input
-          className="input pr-9"
-          placeholder="חיפוש לפי שם, אימייל או טלפון..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Filters */}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-tertiary" />
+          <input
+            className="input pr-9"
+            placeholder="חיפוש לפי שם, אימייל או טלפון..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <select
+          className="input w-full sm:w-48"
+          value={filterSource}
+          onChange={(e) => setFilterSource(e.target.value)}
+        >
+          <option value="all">כל המקורות</option>
+          <option value="admin">Admin ישיר</option>
+          {distributors.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -1296,6 +1592,11 @@ function FreeCheckLeadsTab({ getToken }: { getToken: () => Promise<string> }) {
                   {lead.client_email} &middot; {lead.client_phone}
                 </p>
                 <p className="text-xs text-ink-tertiary">{lead.created_at}</p>
+                {lead.distributor_name && (
+                  <span className="mt-1 inline-block rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+                    מפיץ: {lead.distributor_name}
+                  </span>
+                )}
               </div>
               <div className="text-left sm:text-right">
                 <p className="text-lg font-bold text-emerald-600">
