@@ -96,6 +96,97 @@ function LeadDialog({
   );
 }
 
+/* ---------- New Report Choice Dialog ---------- */
+function NewReportDialog({
+  open,
+  onClose,
+  credits,
+  onSelfUpload,
+  onShareToClient,
+  onBuyCredits,
+}: {
+  open: boolean;
+  onClose: () => void;
+  credits: number;
+  onSelfUpload: () => void;
+  onShareToClient: () => void;
+  onBuyCredits: () => void;
+}) {
+  if (!open) return null;
+
+  const handleSelf = () => {
+    if (credits <= 0) {
+      onBuyCredits();
+      return;
+    }
+    onSelfUpload();
+  };
+
+  const handleShare = () => {
+    if (credits <= 0) {
+      onBuyCredits();
+      return;
+    }
+    onShareToClient();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card mx-4 w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="mb-2 text-lg font-semibold text-ink">דוח חדש</h3>
+        <p className="mb-5 text-xs text-ink-tertiary">בחר כיצד תרצה להפיק את הדוח</p>
+
+        <div className="space-y-3">
+          <button
+            className="w-full rounded-xl border border-slate-200 p-4 text-right transition-all hover:border-emerald-300 hover:bg-emerald-50/50"
+            onClick={handleSelf}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted">
+                <Upload className="h-5 w-5 text-ink" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-ink">העלאה עצמית</p>
+                <p className="text-xs text-ink-tertiary">אני מעלה את קבצי ה-CSV בעצמי</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            className="w-full rounded-xl border border-slate-200 p-4 text-right transition-all hover:border-emerald-300 hover:bg-emerald-50/50"
+            onClick={handleShare}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted">
+                <Share2 className="h-5 w-5 text-ink" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-ink">שלח ללקוח למילוי</p>
+                <p className="text-xs text-ink-tertiary">הלקוח יעלה את הקבצים בעצמו והדוח יישלח אליך במייל</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {credits <= 0 && (
+          <p className="mt-3 text-center text-xs text-red-500">
+            ⚠ אין קרדיטים — תועבר לרכישה
+          </p>
+        )}
+
+        <button className="btn-secondary mt-4 w-full text-xs" onClick={onClose}>
+          ביטול
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ---------- Share to Client Dialog ---------- */
 function ShareDialog({
   open,
@@ -251,6 +342,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyLimit, setHistoryLimit] = useState(3);
   const [shareOpen, setShareOpen] = useState(false);
+  const [newReportOpen, setNewReportOpen] = useState(false);
 
   /* Fetch report history */
   useEffect(() => {
@@ -310,9 +402,6 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary flex items-center gap-1.5 text-xs" onClick={() => navigate("pricing")}>
             <CreditCard className="h-3.5 w-3.5" /> רכישה
-          </button>
-          <button className="btn-secondary flex items-center gap-1.5 text-xs" onClick={() => setShareOpen(true)}>
-            <Share2 className="h-3.5 w-3.5" /> שתף ללקוח
           </button>
           <a
             href={WHATSAPP_LINK}
@@ -410,7 +499,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
           <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
             <Archive className="h-5 w-5 text-ink" /> היסטוריית דוחות
           </h2>
-          <button className="btn-primary flex items-center gap-1.5 text-xs" onClick={() => navigate("generator")}>
+          <button className="btn-primary flex items-center gap-1.5 text-xs" onClick={() => setNewReportOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> דוח חדש
           </button>
         </div>
@@ -471,6 +560,16 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         getToken={getToken}
+      />
+
+      {/* New Report choice dialog */}
+      <NewReportDialog
+        open={newReportOpen}
+        onClose={() => setNewReportOpen(false)}
+        credits={credits}
+        onSelfUpload={() => { setNewReportOpen(false); navigate("generator"); }}
+        onShareToClient={() => { setNewReportOpen(false); setShareOpen(true); }}
+        onBuyCredits={() => { setNewReportOpen(false); navigate("pricing"); }}
       />
 
       {/* Footer – terms link */}
