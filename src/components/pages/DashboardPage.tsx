@@ -14,6 +14,10 @@ import {
   Beaker,
   Upload,
   FileSpreadsheet,
+  Share2,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import GuidePage from "@/components/pages/GuidePage";
@@ -92,6 +96,145 @@ function LeadDialog({
   );
 }
 
+/* ---------- Share to Client Dialog ---------- */
+function ShareDialog({
+  open,
+  onClose,
+  getToken,
+}: {
+  open: boolean;
+  onClose: () => void;
+  getToken: () => Promise<string>;
+}) {
+  const [clientName, setClientName] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ whatsapp_url: string; upload_url: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!open) return null;
+
+  const handleCreate = async () => {
+    if (!clientName.trim()) return;
+    setLoading(true);
+    setError("");
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ token: string; upload_url: string; whatsapp_url: string }>(
+        "/api/share/create",
+        {
+          method: "POST",
+          body: JSON.stringify({ client_name: clientName, client_phone: clientPhone }),
+          token,
+        }
+      );
+      setResult(res);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "שגיאה ביצירת קישור");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (result?.upload_url) {
+      navigator.clipboard.writeText(result.upload_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleClose = () => {
+    setClientName("");
+    setClientPhone("");
+    setResult(null);
+    setError("");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={handleClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card mx-4 w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="mb-4 text-lg font-semibold text-ink">שתף ללקוח</h3>
+
+        {!result ? (
+          <div className="space-y-3">
+            <p className="text-xs text-ink-tertiary">
+              צור קישור ייחודי ללקוח. הלקוח יעלה את הקבצים והדוח יישלח אליך במייל.
+            </p>
+            <input
+              className="input"
+              placeholder="שם הלקוח *"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+            />
+            <input
+              className="input"
+              placeholder="טלפון הלקוח (לשליחה בוואטסאפ)"
+              value={clientPhone}
+              onChange={(e) => setClientPhone(e.target.value)}
+              dir="ltr"
+            />
+            {error && <p className="text-center text-sm text-red-500">{error}</p>}
+            <button
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              onClick={handleCreate}
+              disabled={loading || !clientName.trim()}
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+              {loading ? "יוצר..." : "צור קישור"}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+              <Check className="mx-auto mb-2 h-6 w-6 text-green-600" />
+              <p className="text-sm font-medium text-green-700">הקישור נוצר בהצלחה!</p>
+            </div>
+
+            {/* Copy link */}
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-surface-subtle p-3">
+              <input
+                className="flex-1 bg-transparent text-xs text-ink-secondary outline-none"
+                value={result.upload_url}
+                readOnly
+                dir="ltr"
+              />
+              <button
+                className="btn-secondary flex items-center gap-1 text-xs"
+                onClick={handleCopy}
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "הועתק!" : "העתק"}
+              </button>
+            </div>
+
+            {/* WhatsApp send */}
+            <a
+              href={result.whatsapp_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary flex w-full items-center justify-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" /> שלח ללקוח בוואטסאפ
+            </a>
+
+            <button className="btn-secondary w-full text-xs" onClick={handleClose}>
+              סגור
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 /* ---------- Dashboard ---------- */
 export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: Props) {
   const { user, userData, logout, refreshUserData, getToken } = useAuth();
@@ -107,6 +250,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
   const [history, setHistory] = useState<ReportMeta[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyLimit, setHistoryLimit] = useState(3);
+  const [shareOpen, setShareOpen] = useState(false);
 
   /* Fetch report history */
   useEffect(() => {
@@ -166,6 +310,9 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary flex items-center gap-1.5 text-xs" onClick={() => navigate("pricing")}>
             <CreditCard className="h-3.5 w-3.5" /> רכישה
+          </button>
+          <button className="btn-secondary flex items-center gap-1.5 text-xs" onClick={() => setShareOpen(true)}>
+            <Share2 className="h-3.5 w-3.5" /> שתף ללקוח
           </button>
           <a
             href={WHATSAPP_LINK}
@@ -316,6 +463,13 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
         onClose={() => setLeadOpen(false)}
         taxSaved={freeCheckResult ?? 0}
         userEmail={user?.email ?? ""}
+        getToken={getToken}
+      />
+
+      {/* Share dialog */}
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
         getToken={getToken}
       />
 
