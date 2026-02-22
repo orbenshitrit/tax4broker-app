@@ -31,6 +31,7 @@ import {
   Ticket,
   Settings,
   Eye,
+  Beaker,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -74,7 +75,7 @@ interface ReportRow {
   reportPeriod: string;
 }
 
-type AdminTab = "dashboard" | "users" | "coupons" | "seo" | "content" | "admins";
+type AdminTab = "dashboard" | "users" | "coupons" | "seo" | "content" | "admins" | "free-checks";
 
 interface Props {
   navigate: (page: Page) => void;
@@ -189,6 +190,7 @@ export default function AdminPage({ navigate }: Props) {
         <TabButton active={tab === "coupons"} onClick={() => setTab("coupons")} icon={<Gift className="h-3.5 w-3.5" />} label="קופונים" />
         <TabButton active={tab === "seo"} onClick={() => setTab("seo")} icon={<Globe className="h-3.5 w-3.5" />} label="SEO" />
         <TabButton active={tab === "content"} onClick={() => setTab("content")} icon={<FileText className="h-3.5 w-3.5" />} label="תוכן" />
+        <TabButton active={tab === "free-checks"} onClick={() => setTab("free-checks")} icon={<Beaker className="h-3.5 w-3.5" />} label="בדיקה חינמית" />
         {isSuperAdmin && (
           <TabButton active={tab === "admins"} onClick={() => setTab("admins")} icon={<Shield className="h-3.5 w-3.5" />} label="הרשאות" />
         )}
@@ -201,6 +203,7 @@ export default function AdminPage({ navigate }: Props) {
       {tab === "seo" && <SeoTab getToken={getToken} flash={flash} />}
       {tab === "content" && <ContentTab getToken={getToken} flash={flash} />}
       {tab === "admins" && isSuperAdmin && <AdminsTab getToken={getToken} flash={flash} />}
+      {tab === "free-checks" && <FreeCheckLeadsTab getToken={getToken} />}
     </div>
   );
 }
@@ -1211,6 +1214,95 @@ function AdminsTab({
                   <UserMinus className="h-3 w-3" /> הסר
                 </button>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+/* ═══════════════════ Free Check Leads Tab ═══════════════════ */
+
+interface LeadRow {
+  id: string;
+  client_name: string;
+  client_phone: string;
+  client_email: string;
+  tax_saved: number;
+  created_at: string;
+}
+
+function FreeCheckLeadsTab({ getToken }: { getToken: () => Promise<string> }) {
+  const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ leads: LeadRow[] }>("/api/free-check-share/leads", { token });
+        setLeads(res.leads ?? []);
+      } catch { /* */ }
+      finally { setLoading(false); }
+    })();
+  }, [getToken]);
+
+  const filtered = leads.filter(
+    (l) =>
+      l.client_name.toLowerCase().includes(search.toLowerCase()) ||
+      l.client_email.toLowerCase().includes(search.toLowerCase()) ||
+      l.client_phone.includes(search)
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-ink">לידים מבדיקה חינמית</h2>
+        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+          {leads.length} לידים
+        </span>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-tertiary" />
+        <input
+          className="input pr-9"
+          placeholder="חיפוש לפי שם, אימייל או טלפון..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink border-t-transparent" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card p-8 text-center">
+          <Beaker className="mx-auto mb-2 h-8 w-8 text-ink-tertiary" />
+          <p className="text-sm text-ink-tertiary">{leads.length === 0 ? "אין לידים עדיין" : "לא נמצאו תוצאות"}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((lead) => (
+            <div key={lead.id} className="card flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{lead.client_name}</p>
+                <p className="text-xs text-ink-tertiary">
+                  {lead.client_email} &middot; {lead.client_phone}
+                </p>
+                <p className="text-xs text-ink-tertiary">{lead.created_at}</p>
+              </div>
+              <div className="text-left sm:text-right">
+                <p className="text-lg font-bold text-emerald-600">
+                  ₪{lead.tax_saved.toLocaleString("he-IL", { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-[10px] text-ink-tertiary">חיסכון משוער</p>
+              </div>
             </div>
           ))}
         </div>

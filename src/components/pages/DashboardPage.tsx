@@ -18,6 +18,7 @@ import {
   Copy,
   Check,
   Loader2,
+  Link2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import GuidePage from "@/components/pages/GuidePage";
@@ -429,6 +430,132 @@ function ShareDialog({
   );
 }
 
+
+/* ---------- Free Check Share Dialog ---------- */
+function FreeCheckShareDialog({
+  open,
+  onClose,
+  getToken,
+}: {
+  open: boolean;
+  onClose: () => void;
+  getToken: () => Promise<string>;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ upload_url: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!open) return null;
+
+  const handleCreate = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ token: string; upload_url: string }>(
+        "/api/free-check-share/create",
+        {
+          method: "POST",
+          body: JSON.stringify({ label: "" }),
+          token,
+        }
+      );
+      setResult(res);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "שגיאה ביצירת קישור");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (result?.upload_url) {
+      navigator.clipboard.writeText(result.upload_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const whatsappUrl = result
+    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(
+        "היי רציתי לבדוק אם אתה יכול/ה לחסוך במס על השקעות בחו״ל? הנה הקישור:\n" + result.upload_url
+      )}`
+    : "";
+
+  const handleClose = () => {
+    setResult(null);
+    setError("");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={handleClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card mx-4 w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="mb-4 text-lg font-semibold text-ink">שלח בדיקה חינמית ללקוח</h3>
+
+        {!result ? (
+          <div className="space-y-3">
+            <p className="text-xs text-ink-tertiary">
+              צור קישור לבדיקה חינמית — הלקוח יעלה קבצים ויראה את החיסכון המשוער. ללא שימוש בקרדיטים.
+            </p>
+            {error && <p className="text-center text-sm text-red-500">{error}</p>}
+            <button
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              onClick={handleCreate}
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              {loading ? "יוצר..." : "צור קישור"}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+              <Check className="mx-auto mb-2 h-6 w-6 text-green-600" />
+              <p className="text-sm font-medium text-green-700">הקישור נוצר בהצלחה!</p>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-surface-subtle p-3">
+              <input
+                className="flex-1 bg-transparent text-xs text-ink-secondary outline-none"
+                value={result.upload_url}
+                readOnly
+                dir="ltr"
+              />
+              <button
+                className="btn-secondary flex items-center gap-1 text-xs"
+                onClick={handleCopy}
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "הועתק!" : "העתק"}
+              </button>
+            </div>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary flex w-full items-center justify-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" /> שלח ללקוח בוואטסאפ
+            </a>
+
+            <button className="btn-secondary w-full text-xs" onClick={handleClose}>
+              סגור
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 /* ---------- Dashboard ---------- */
 export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: Props) {
   const { user, userData, logout, refreshUserData, getToken } = useAuth();
@@ -446,6 +573,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
   const [historyLimit, setHistoryLimit] = useState(3);
   const [shareOpen, setShareOpen] = useState(false);
   const [newReportOpen, setNewReportOpen] = useState(false);
+  const [freeCheckShareOpen, setFreeCheckShareOpen] = useState(false);
 
   /* Fetch report history */
   useEffect(() => {
@@ -526,6 +654,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
       </div>
 
       {/* ---- Free Check Section ---- */}
+      {isAdmin && (
       <div className="card mb-6 p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -536,11 +665,16 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
               העלה את 2 הקבצים כמו במדריך וקבל כמה מס נחסך לפי פס&quot;ד — ללא שימוש בקרדיטים
             </p>
           </div>
-          {!showFreeCheck && (
-            <button className="btn-secondary text-xs" onClick={() => setShowFreeCheck(true)}>
-              בדיקה חינמית
+          <div className="flex gap-2">
+            <button className="btn-secondary text-xs flex items-center gap-1" onClick={() => setFreeCheckShareOpen(true)}>
+              <Link2 className="h-3.5 w-3.5" /> שלח ללקוח
             </button>
-          )}
+            {!showFreeCheck && (
+              <button className="btn-secondary text-xs" onClick={() => setShowFreeCheck(true)}>
+                בדיקה חינמית
+              </button>
+            )}
+          </div>
         </div>
 
         {showFreeCheck && (
@@ -590,6 +724,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
           </motion.div>
         )}
       </div>
+      )}
 
       {/* ---- Guide ---- */}
       <div className="mb-6">
@@ -662,6 +797,13 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
       <ShareDialog
         open={shareOpen}
         onClose={() => setShareOpen(false)}
+        getToken={getToken}
+      />
+
+      {/* Free Check Share dialog */}
+      <FreeCheckShareDialog
+        open={freeCheckShareOpen}
+        onClose={() => setFreeCheckShareOpen(false)}
         getToken={getToken}
       />
 
