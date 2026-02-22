@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Page } from "@/components/AppShell";
-import { ArrowRight, Star, CreditCard, Gift, CheckCircle2, Smartphone } from "lucide-react";
+import { ArrowRight, Star, CreditCard, Gift, CheckCircle2, Smartphone, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 const PLANS = [
-  { id: 1, name: "חבילת בסיס", credits: 1, price: 100, popular: false },
-  { id: 2, name: "חבילת פרו", credits: 10, price: 800, popular: true },
-  { id: 3, name: "חבילת משרד", credits: 20, price: 1400, popular: false },
+  { id: 1, name: "חבילת בסיס", credits: 1, price: 100, originalPrice: 150, popular: false },
+  { id: 2, name: "חבילת פרו", credits: 10, price: 800, originalPrice: 1200, popular: true },
+  { id: 3, name: "חבילת משרד", credits: 20, price: 1400, originalPrice: 2100, popular: false },
 ];
 
 const BIT_PHONE = "0502551542";
@@ -74,6 +74,7 @@ export default function PricingPage({ navigate }: Props) {
           <CreditCard className="mb-1 inline h-6 w-6 text-ink" /> רכישת קרדיטים
         </h1>
         <p className="mt-1 text-sm text-ink-tertiary">כל קרדיט = דוח מס אחד</p>
+        <p className="mt-1.5 text-xs text-ink-quaternary">* המחירים אינם כוללים מע״מ</p>
       </div>
 
       {/* Messages */}
@@ -109,9 +110,18 @@ export default function PricingPage({ navigate }: Props) {
 
             <h3 className="text-base font-semibold text-ink">{plan.name}</h3>
 
-            <p className="mt-3 text-3xl font-bold tracking-tight text-ink">
-              ₪{plan.price.toLocaleString("he-IL")}
-            </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+              <Zap className="h-3 w-3" /> מחיר השקה
+            </div>
+
+            <div className="mt-2 flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight text-ink">
+                ₪{plan.price.toLocaleString("he-IL")}
+              </p>
+              <p className="text-base text-ink-tertiary line-through">
+                ₪{plan.originalPrice.toLocaleString("he-IL")}
+              </p>
+            </div>
 
             <p className="mt-1 text-sm font-medium text-ink-tertiary">
               {plan.credits} {plan.credits === 1 ? "דוח" : "דוחות"}
