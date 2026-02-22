@@ -1280,12 +1280,12 @@ function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>;
       await apiFetch("/api/distributors", {
         token,
         method: "POST",
-        body: {
+        body: JSON.stringify({
           name: newName.trim(),
           email: newEmail.trim(),
           phone: newPhone.trim(),
           commission_pct: parseFloat(newCommission) || 0,
-        },
+        }),
       });
       flash("success", "מפיץ נוסף בהצלחה");
       setNewName(""); setNewEmail(""); setNewPhone(""); setNewCommission("0");
@@ -1301,7 +1301,7 @@ function DistributorsTab({ getToken, flash }: { getToken: () => Promise<string>;
       await apiFetch(`/api/distributors/${id}`, {
         token,
         method: "PUT",
-        body: { commission_pct: parseFloat(editPct) || 0 },
+        body: JSON.stringify({ commission_pct: parseFloat(editPct) || 0 }),
       });
       flash("success", "אחוז תגמול עודכן");
       setEditId(null);
