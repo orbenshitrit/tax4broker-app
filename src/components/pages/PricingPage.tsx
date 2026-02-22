@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Page } from "@/components/AppShell";
-import { ArrowRight, Star, CreditCard, Gift, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Star, CreditCard, Gift, CheckCircle2, Smartphone } from "lucide-react";
 import { motion } from "framer-motion";
 
 const PLANS = [
@@ -14,7 +14,6 @@ const PLANS = [
 ];
 
 const BIT_PHONE = "0502551542";
-const BIT_LINK = `https://www.payboxapp.com/?phone=${BIT_PHONE}`;
 
 interface Props {
   navigate: (page: Page) => void;
@@ -57,12 +56,6 @@ export default function PricingPage({ navigate }: Props) {
     } finally {
       setCouponLoading(false);
     }
-  };
-
-  /* ---- Bit payment redirect ---- */
-  const openBitPayment = (plan: (typeof PLANS)[0]) => {
-    const url = `${BIT_LINK}&amount=${plan.price}&description=${encodeURIComponent(plan.name + " - Tax4Broker")}`;
-    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -124,19 +117,17 @@ export default function PricingPage({ navigate }: Props) {
               {plan.credits} {plan.credits === 1 ? "דוח" : "דוחות"}
             </p>
 
-            <div className="mt-auto pt-5">
-              <button
-                className={`flex w-full items-center justify-center gap-2 py-2.5 text-sm font-medium ${
-                  plan.popular ? "btn-primary" : "btn-secondary"
-                }`}
-                onClick={() => openBitPayment(plan)}
-              >
-                <ExternalLink className="h-4 w-4" />
-                שלם ב-Bit
-              </button>
-              <p className="mt-2 text-center text-[11px] text-ink-tertiary">
-                לאחר התשלום תקבל קוד קופון
-              </p>
+            <div className="mt-auto pt-5 space-y-2.5">
+              <div className="rounded-lg border border-edge bg-surface-subtle p-3 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-sm font-semibold text-ink">
+                  <Smartphone className="h-4 w-4" />
+                  <span>העבר תשלום Bit בסך ₪{plan.price.toLocaleString("he-IL")}</span>
+                </div>
+                <p className="mt-1.5 text-sm font-bold text-ink" dir="ltr">{BIT_PHONE}</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-ink-secondary">
+                  ומיד תקבל קוד לכמות הקרדיטים להזנה במערכת תחת סעיף <span className="font-semibold">קוד קופון</span> למטה
+                </p>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -179,7 +170,7 @@ export default function PricingPage({ navigate }: Props) {
       {/* Payment info */}
       <div className="mt-6 text-center text-xs text-ink-tertiary">
         <p>
-          לתמיכה בתשלום:{" "}
+          לשאלות ותמיכה:{" "}
           <a href={`tel:+972${BIT_PHONE.slice(1)}`} className="underline">
             {BIT_PHONE}
           </a>
