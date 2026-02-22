@@ -56,7 +56,7 @@ const STEPS: { title: string; body: string; hasImage: boolean }[] = [
   {
     title: "בחירת פורמט",
     body: "בחר **CSV** כפורמט להורדה.",
-    hasImage: true,
+    hasImage: false,
   },
   {
     title: "הורדת הקובץ",
@@ -103,7 +103,7 @@ function BrokerGuide() {
 
       {STEPS.map((step, idx) => {
         const isOpen = expandedStep === idx;
-        const imgSrc = step.hasImage ? `/guide/step${idx + 1}.png` : null;
+        const imgSrc = step.hasImage ? `/guide/guide_step${idx + 1}.png` : null;
 
         return (
           <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden">
@@ -136,7 +136,7 @@ function BrokerGuide() {
                     {renderMd(step.body)}
                     {imgSrc && (
                       <div className="relative mt-3 cursor-pointer group" onClick={() => setLightboxSrc(imgSrc)}>
-                        <img src={imgSrc} alt={`Step ${idx + 1}`} className="w-full rounded-lg border border-slate-200" />
+                        <img src={imgSrc} alt={`Step ${idx + 1}`} className="w-full rounded-lg border border-slate-200" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity">
                           <ZoomIn className="h-6 w-6 text-white" />
                         </div>
