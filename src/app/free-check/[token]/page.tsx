@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Upload, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp, ZoomIn, X, FileSpreadsheet } from "lucide-react";
@@ -9,68 +9,68 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 /* ---- 13-Step Guide Data ---- */
 const STEPS: { title: string; body: string; hasImage: boolean }[] = [
   {
-    title: "\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF IBKR",
-    body: "\u05D4\u05D9\u05DB\u05E0\u05E1 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF IBKR \u05E9\u05DC\u05DA \u05D1\u05DB\u05EA\u05D5\u05D1\u05EA:\nhttps://www.interactivebrokers.com\n\u05DC\u05D7\u05E5 \u05E2\u05DC **Log In** \u05D5\u05D4\u05D6\u05DF \u05D0\u05EA \u05E4\u05E8\u05D8\u05D9 \u05D4\u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA.",
+    title: "כניסה לחשבון IBKR",
+    body: "היכנס לחשבון IBKR שלך בכתובת:\nhttps://www.interactivebrokers.com\nלחץ על **Log In** והזן את פרטי ההתחברות.",
     hasImage: true,
   },
   {
-    title: "\u05E0\u05D9\u05D5\u05D5\u05D8 \u05DC-Custom Statements",
-    body: "\u05D1\u05EA\u05E4\u05E8\u05D9\u05D8 \u05D4\u05E2\u05DC\u05D9\u05D5\u05DF, \u05DC\u05D7\u05E5 \u05E2\u05DC **Performance & Reports** \u2192 **Statements** \u2192 **Custom Statements**.",
+    title: "ניווט ל-Custom Statements",
+    body: "בתפריט העליון, לחץ על **Performance & Reports** → **Statements** → **Custom Statements**.",
     hasImage: true,
   },
   {
-    title: "\u05D9\u05E6\u05D9\u05E8\u05EA \u05D3\u05D5\u05D7 \u05D7\u05D3\u05E9",
-    body: "\u05DC\u05D7\u05E5 \u05E2\u05DC \u05DB\u05E4\u05EA\u05D5\u05E8 **+** \u05DC\u05D9\u05E6\u05D9\u05E8\u05EA \u05D3\u05D5\u05D7 \u05D7\u05D3\u05E9.\n\u05D1\u05D7\u05E8 \u05E9\u05DD \u05DC\u05D3\u05D5\u05D7 (\u05DC\u05DE\u05E9\u05DC: **trades**).",
+    title: "יצירת דוח חדש",
+    body: "לחץ על כפתור **+** ליצירת דוח חדש.\nבחר שם לדוח (למשל: **trades**).",
     hasImage: true,
   },
   {
-    title: "\u05D1\u05D7\u05D9\u05E8\u05EA \u05E1\u05E2\u05D9\u05E4\u05D9\u05DD \u05DC\u05D3\u05D5\u05D7 \u05E2\u05E1\u05E7\u05D0\u05D5\u05EA",
-    body: "**\u05D1\u05D7\u05E8 \u05E1\u05E2\u05D9\u05E4\u05D9\u05DD:**\n- \u2705 Account Information\n- \u2705 Trades",
+    title: "בחירת סעיפים לדוח עסקאות",
+    body: "**בחר סעיפים:**\n- ✅ Account Information\n- ✅ Trades",
     hasImage: true,
   },
   {
-    title: "\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA \u05E1\u05E2\u05D9\u05E4\u05D9\u05DD",
-    body: "\u05D2\u05DC\u05D5\u05DC \u05DE\u05D8\u05D4 \u05E2\u05D3 **Section Configurations**\n- \u05E1\u05DE\u05DF \u05D4\u05DB\u05DC \u05D1-**No**\n- \u05DE\u05DC\u05D1\u05D3: **Display Closing Trades Only?** \u2192 \u05E1\u05DE\u05DF **Yes**",
+    title: "הגדרות סעיפים",
+    body: 'גלול מטה עד **Section Configurations**\n- סמן הכל ב-**No**\n- מלבד: **Display Closing Trades Only?** → סמן **Yes**',
     hasImage: true,
   },
   {
-    title: "\u05E9\u05DE\u05D9\u05E8\u05EA \u05D4\u05D3\u05D5\u05D7",
-    body: "\u05D1\u05E9\u05DC\u05D1 **Delivery Configuration** \u05E0\u05D0 \u05DC\u05D0 \u05DC\u05E9\u05E0\u05D5\u05EA \u05DB\u05DC\u05D5\u05DD \u05D5\u05DC\u05DC\u05D7\u05D5\u05E5 **Continue**.\n\u05DC\u05D0\u05D7\u05E8 \u05DE\u05DB\u05DF \u05D9\u05D9\u05E4\u05EA\u05D7 \u05DE\u05E1\u05DA \u05E0\u05D5\u05E1\u05E3 \u2014 \u05DC\u05D7\u05E5 \u05E2\u05DC **Create**.",
+    title: "שמירת הדוח",
+    body: "בשלב **Delivery Configuration** נא לא לשנות כלום וללחוץ **Continue**.\nלאחר מכן ייפתח מסך נוסף — לחץ על **Create**.",
     hasImage: false,
   },
   {
-    title: "\u05D4\u05D3\u05D5\u05D7 \u05E0\u05D5\u05E6\u05E8",
-    body: "\u05D4\u05D3\u05D5\u05D7 \u05E0\u05D5\u05E6\u05E8 \u05D1\u05D4\u05E6\u05DC\u05D7\u05D4! \u05EA\u05D5\u05DB\u05DC \u05DC\u05E8\u05D0\u05D5\u05EA \u05D0\u05D5\u05EA\u05D5 \u05D1\u05E8\u05E9\u05D9\u05DE\u05EA \u05D4\u05D3\u05D5\u05D7\u05D5\u05EA.",
+    title: "הדוח נוצר",
+    body: "הדוח נוצר בהצלחה! תוכל לראות אותו ברשימת הדוחות.",
     hasImage: false,
   },
   {
-    title: "\u05D4\u05E4\u05E2\u05DC\u05EA \u05D4\u05D3\u05D5\u05D7",
-    body: "\u05DC\u05D7\u05E5 \u05E2\u05DC \u05D4\u05D7\u05E5 (\u25B6) \u05DB\u05D3\u05D9 \u05DC\u05D4\u05E4\u05E2\u05D9\u05DC \u05D0\u05EA \u05D4\u05D3\u05D5\u05D7 \u05D5\u05DC\u05D9\u05D9\u05E6\u05E8 \u05D0\u05EA \u05D4\u05E7\u05D5\u05D1\u05E5.",
+    title: "הפעלת הדוח",
+    body: "לחץ על החץ (▶) כדי להפעיל את הדוח ולייצר את הקובץ.",
     hasImage: true,
   },
   {
-    title: "\u05D4\u05D2\u05D3\u05E8\u05EA \u05EA\u05D0\u05E8\u05D9\u05DA",
-    body: "\u05D1\u05D7\u05E8 \u05EA\u05D0\u05E8\u05D9\u05DA \u05D4\u05EA\u05D7\u05DC\u05D4: **01/01/20XX**\n\u05EA\u05D0\u05E8\u05D9\u05DA \u05E1\u05D9\u05D5\u05DD: **31/12/20XX**\n(\u05DC\u05E4\u05D9 \u05E9\u05E0\u05EA \u05D4\u05DE\u05E1 \u05D4\u05E8\u05DC\u05D5\u05D5\u05E0\u05D8\u05D9\u05EA)",
+    title: "הגדרת תאריך",
+    body: "בחר תאריך התחלה: **01/01/20XX**\nתאריך סיום: **31/12/20XX**\n(לפי שנת המס הרלוונטית)",
     hasImage: true,
   },
   {
-    title: "\u05D1\u05D7\u05D9\u05E8\u05EA \u05E4\u05D5\u05E8\u05DE\u05D8",
-    body: "\u05D1\u05D7\u05E8 **CSV** \u05DB\u05E4\u05D5\u05E8\u05DE\u05D8 \u05DC\u05D4\u05D5\u05E8\u05D3\u05D4.",
+    title: "בחירת פורמט",
+    body: "בחר **CSV** כפורמט להורדה.",
     hasImage: true,
   },
   {
-    title: "\u05D4\u05D5\u05E8\u05D3\u05EA \u05D4\u05E7\u05D5\u05D1\u05E5",
-    body: "\u05DC\u05D7\u05E5 \u05E2\u05DC **\u05D4\u05D7\u05E5 \u05DC\u05D4\u05D5\u05E8\u05D3\u05D4** \u05D5\u05D4\u05E7\u05D5\u05D1\u05E5 \u05D9\u05E9\u05DE\u05E8 \u05D1\u05DE\u05D7\u05E9\u05D1.",
+    title: "הורדת הקובץ",
+    body: "לחץ על **החץ להורדה** והקובץ ישמר במחשב.",
     hasImage: true,
   },
   {
-    title: "\u05D9\u05E6\u05D9\u05E8\u05EA \u05D3\u05D5\u05D7 \u05D3\u05D9\u05D1\u05D9\u05D3\u05E0\u05D3\u05D9\u05DD",
-    body: "\u05D7\u05D6\u05D5\u05E8 \u05DC\u05E9\u05DC\u05D1 3 \u2014 \u05D4\u05E4\u05E2\u05DD \u05D1\u05D7\u05E8 \u05E8\u05E7 \u05D0\u05EA:\n- \u2705 Account Information\n- \u2705 Dividends",
+    title: "יצירת דוח דיבידנדים",
+    body: "חזור לשלב 3 — הפעם בחר רק את:\n- ✅ Account Information\n- ✅ Dividends",
     hasImage: false,
   },
   {
-    title: "\u05D4\u05D5\u05E8\u05D3\u05EA \u05D3\u05D5\u05D7 \u05D3\u05D9\u05D1\u05D9\u05D3\u05E0\u05D3\u05D9\u05DD",
-    body: "\u05D4\u05E4\u05E2\u05DC \u05D0\u05EA \u05D3\u05D5\u05D7 \u05D4\u05D3\u05D9\u05D1\u05D9\u05D3\u05E0\u05D3\u05D9\u05DD \u05D5\u05D4\u05D5\u05E8\u05D3 \u05D0\u05D5\u05EA\u05D5 \u05D1\u05E4\u05D5\u05E8\u05DE\u05D8 CSV.",
+    title: "הורדת דוח דיבידנדים",
+    body: "הפעל את דוח הדיבידנדים והורד אותו בפורמט CSV.",
     hasImage: false,
   },
 ];
@@ -98,7 +98,7 @@ function BrokerGuide() {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-ink mb-2">
-        \u05DE\u05D3\u05E8\u05D9\u05DA \u05D4\u05D5\u05E8\u05D3\u05EA \u05E7\u05D1\u05E6\u05D9\u05DD \u05DE-IBKR (13 \u05E9\u05DC\u05D1\u05D9\u05DD)
+        מדריך הורדת קבצים מ-IBKR (13 שלבים)
       </h3>
 
       {STEPS.map((step, idx) => {
@@ -185,6 +185,7 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [disclaimer, setDisclaimer] = useState(false);
 
   // Result
   const [taxSaved, setTaxSaved] = useState<number | null>(null);
@@ -202,21 +203,21 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
       try {
         const r = await fetch(`${API_BASE}/api/free-check-share/info/${token}`);
         if (!r.ok) {
-          const d = await r.json().catch(() => ({ detail: "\u05E7\u05D9\u05E9\u05D5\u05E8 \u05DC\u05D0 \u05EA\u05E7\u05D9\u05DF" }));
-          setErrorMsg(d.detail || "\u05E7\u05D9\u05E9\u05D5\u05E8 \u05DC\u05D0 \u05EA\u05E7\u05D9\u05DF");
+          const d = await r.json().catch(() => ({ detail: "קישור לא תקין" }));
+          setErrorMsg(d.detail || "קישור לא תקין");
           setStatus("error");
           return;
         }
         setStatus("ready");
       } catch {
-        setErrorMsg("\u05E9\u05D2\u05D9\u05D0\u05EA \u05EA\u05E7\u05E9\u05D5\u05E8\u05EA");
+        setErrorMsg("שגיאת תקשורת");
         setStatus("error");
       }
     })();
   }, [token]);
 
   const handleSubmit = async () => {
-    if (!tradesFile || !clientName.trim() || !clientPhone.trim() || !clientEmail.trim() || !consent) return;
+    if (!tradesFile || !clientName.trim() || !clientPhone.trim() || !clientEmail.trim() || !consent || !disclaimer) return;
 
     setStatus("uploading");
     setErrorMsg("");
@@ -235,8 +236,8 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
       });
 
       if (!r.ok) {
-        const d = await r.json().catch(() => ({ detail: "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05E2\u05D9\u05D1\u05D5\u05D3" }));
-        setErrorMsg(d.detail || "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05E2\u05D9\u05D1\u05D5\u05D3");
+        const d = await r.json().catch(() => ({ detail: "שגיאה בעיבוד" }));
+        setErrorMsg(d.detail || "שגיאה בעיבוד");
         setStatus("ready");
         return;
       }
@@ -246,7 +247,7 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
       setShowResult(true);
       setStatus("done");
     } catch {
-      setErrorMsg("\u05E9\u05D2\u05D9\u05D0\u05EA \u05EA\u05E7\u05E9\u05D5\u05E8\u05EA");
+      setErrorMsg("שגיאת תקשורת");
       setStatus("ready");
     }
   };
@@ -272,25 +273,28 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
     );
   }
 
-  /* Done  show result */
+  /* Done — show result */
   if (status === "done" && showResult) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-subtle px-4" dir="rtl">
         <div className="card max-w-md w-full p-8 text-center">
           <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-500" />
-          <h2 className="text-xl font-bold text-ink mb-2">\u05D7\u05D9\u05E1\u05DB\u05D5\u05DF \u05DE\u05E1 \u05DE\u05E9\u05D5\u05E2\u05E8 \u05DC\u05E4\u05D9 \u05D4\u05DE\u05E2\u05E8\u05DB\u05D5\u05EA \u05E9\u05DC\u05E0\u05D5:</h2>
+          <h2 className="text-xl font-bold text-ink mb-2">חיסכון מס משוער לפי המערכות שלנו:</h2>
           <p className="text-3xl font-bold text-green-600 mb-4">
-            \u20AA{(taxSaved ?? 0).toLocaleString("he-IL", { minimumFractionDigits: 2 })}
+            ₪{(taxSaved ?? 0).toLocaleString("he-IL", { minimumFractionDigits: 2 })}
           </p>
           <p className="text-sm text-ink-secondary">
-            \u05E0\u05D7\u05D6\u05D5\u05E8 \u05D0\u05DC\u05D9\u05DA \u05D1\u05D4\u05E7\u05D3\u05DD \u05E2\u05DD \u05E4\u05E8\u05D8\u05D9\u05DD \u05E0\u05D5\u05E1\u05E4\u05D9\u05DD. \u05EA\u05D5\u05D3\u05D4 \u05E9\u05D4\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1\u05E9\u05D9\u05E8\u05D5\u05EA!
+            נחזור אליך בהקדם עם פרטים נוספים. תודה שהשתמשת בשירות!
+          </p>
+          <p className="mt-3 text-xs text-ink-tertiary">
+            * הסכום המוצג הינו הערכה בלבד ואינו מהווה התחייבות להחזר מס.
           </p>
         </div>
       </div>
     );
   }
 
-  /* Ready  upload + client details form */
+  /* Ready — upload + client details form */
   return (
     <div className="min-h-screen bg-surface-subtle" dir="rtl">
       {/* Header */}
@@ -298,7 +302,7 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold text-ink">Tax4Broker</h1>
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-            \u05D1\u05D3\u05D9\u05E7\u05D4 \u05D7\u05D9\u05E0\u05DE\u05D9\u05EA
+            בדיקה חינמית
           </span>
         </div>
       </header>
@@ -312,16 +316,16 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
         {/* Upload Section */}
         <div className="card p-6">
           <h2 className="text-base font-semibold text-ink mb-1">
-            <FileSpreadsheet className="inline h-5 w-5 ml-1" /> \u05D4\u05E2\u05DC\u05D0\u05EA \u05E7\u05D5\u05D1\u05E5
+            <FileSpreadsheet className="inline h-5 w-5 ml-1" /> העלאת קובץ
           </h2>
           <p className="text-xs text-ink-tertiary mb-4">
-            \u05D4\u05E2\u05DC\u05D4 \u05D0\u05EA \u05E7\u05D5\u05D1\u05E5 \u05D4\u05E2\u05E1\u05E7\u05D0\u05D5\u05EA (Trades) \u05E9\u05D4\u05D5\u05E8\u05D3\u05EA \u05DE-IBKR
+            העלה את קובץ העסקאות (Trades) שהורדת מ-IBKR
           </p>
 
           <label className="drop-zone cursor-pointer block">
             <Upload className="mx-auto mb-2 h-6 w-6 text-ink-tertiary" />
-            <span className="block text-sm font-medium text-ink">\u05D3\u05D5\u05D7 \u05E2\u05E1\u05E7\u05D0\u05D5\u05EA (Trades)</span>
-            <span className="text-xs text-ink-tertiary">CSV \u05D1\u05DC\u05D1\u05D3</span>
+            <span className="block text-sm font-medium text-ink">דוח עסקאות (Trades)</span>
+            <span className="text-xs text-ink-tertiary">CSV בלבד</span>
             <input
               type="file"
               accept=".csv"
@@ -336,20 +340,20 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
 
         {/* Client Details */}
         <div className="card p-6">
-          <h2 className="text-base font-semibold text-ink mb-4">\u05E4\u05E8\u05D8\u05D9\u05DD \u05DC\u05D9\u05E6\u05D9\u05E8\u05EA \u05E7\u05E9\u05E8</h2>
+          <h2 className="text-base font-semibold text-ink mb-4">פרטים ליצירת קשר</h2>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-ink-secondary mb-1">\u05E9\u05DD \u05DE\u05DC\u05D0 *</label>
+              <label className="block text-xs font-medium text-ink-secondary mb-1">שם מלא *</label>
               <input
                 className="input"
-                placeholder="\u05D4\u05DB\u05E0\u05E1 \u05E9\u05DD \u05DE\u05DC\u05D0"
+                placeholder="הכנס שם מלא"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink-secondary mb-1">\u05D8\u05DC\u05E4\u05D5\u05DF *</label>
+              <label className="block text-xs font-medium text-ink-secondary mb-1">טלפון *</label>
               <input
                 className="input"
                 placeholder="050-0000000"
@@ -359,7 +363,7 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink-secondary mb-1">\u05D0\u05D9\u05DE\u05D9\u05D9\u05DC *</label>
+              <label className="block text-xs font-medium text-ink-secondary mb-1">אימייל *</label>
               <input
                 className="input"
                 placeholder="email@example.com"
@@ -368,6 +372,8 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
                 dir="ltr"
               />
             </div>
+
+            {/* Consent checkbox */}
             <label className="flex items-start gap-2 text-xs text-ink-secondary mt-2">
               <input
                 type="checkbox"
@@ -376,7 +382,20 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
                 className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-emerald-600"
               />
               <span>
-                \u05D0\u05E0\u05D9 \u05DE\u05D0\u05E9\u05E8/\u05EA \u05DC\u05E7\u05D1\u05DC \u05E4\u05E0\u05D9\u05D5\u05EA \u05D1\u05D0\u05D9\u05DE\u05D9\u05D9\u05DC, \u05D8\u05DC\u05E4\u05D5\u05DF \u05D0\u05D5 \u05D5\u05D5\u05D0\u05D8\u05E1\u05D0\u05E4 \u05D1\u05E0\u05D5\u05E9\u05D0 \u05E9\u05D9\u05E8\u05D5\u05EA\u05D9 Tax4Broker.
+                אני מאשר/ת לקבל פניות באימייל, טלפון או וואטסאפ בנושא שירותי Tax4Broker.
+              </span>
+            </label>
+
+            {/* Disclaimer checkbox */}
+            <label className="flex items-start gap-2 text-xs text-ink-secondary">
+              <input
+                type="checkbox"
+                checked={disclaimer}
+                onChange={(e) => setDisclaimer(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-emerald-600"
+              />
+              <span>
+                אני מודע/ת לכך שהתוצאה המוצגת הינה הערכה בלבד, המבוססת על הנתונים שהועלו, ואינה מהווה התחייבות להחזר מס בפועל.
               </span>
             </label>
           </div>
@@ -389,14 +408,14 @@ export default function FreeCheckPage({ params }: { params: Promise<{ token: str
         <button
           className="btn-primary w-full py-3 text-base flex items-center justify-center gap-2"
           onClick={handleSubmit}
-          disabled={!tradesFile || !clientName.trim() || !clientPhone.trim() || !clientEmail.trim() || !consent || status === "uploading"}
+          disabled={!tradesFile || !clientName.trim() || !clientPhone.trim() || !clientEmail.trim() || !consent || !disclaimer || status === "uploading"}
         >
           {status === "uploading" ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin" /> \u05DE\u05E2\u05D1\u05D3...
+              <Loader2 className="h-5 w-5 animate-spin" /> מעבד...
             </>
           ) : (
-            <>\u05D1\u05D3\u05D5\u05E7 \u05D7\u05D9\u05E1\u05DB\u05D5\u05DF \u05DE\u05E1 \u05DE\u05E9\u05D5\u05E2\u05E8</>
+            <>בדוק חיסכון מס משוער</>
           )}
         </button>
       </main>
