@@ -207,7 +207,6 @@ function ShareDialog({
   const [purchaseFromRelated, setPurchaseFromRelated] = useState(false);
   const [reitProfit, setReitProfit] = useState(false);
   const [taxWithheld, setTaxWithheld] = useState(false);
-  const [clientPhone, setClientPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ whatsapp_url: string; upload_url: string } | null>(null);
   const [copied, setCopied] = useState(false);
