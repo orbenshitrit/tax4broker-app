@@ -376,10 +376,9 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
       const files: Record<string, ReportFile> = {};
       if (raw.files) {
         const labels: Record<string, string> = {
-          main_excel: `📗 דוח ראשי — ${raw.client_name}.xlsx`,
-          ref_excel_a: "📙 אסמכתה ל-1325 א",
-          ref_excel_b: "📙 אסמכתה ל-1325 ב",
-          ref_excel_combined: "📙 אסמכתה שנתית ל-1325",
+          ref_1325_a: "📙 1325 א",
+          ref_1325_b: "📙 1325 ב",
+          ref_1325_combined: "📙 1325A+B",
         };
         for (const [key, f] of Object.entries(raw.files) as [string, any][]) {
           files[key] = {
@@ -463,7 +462,8 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
 
         {/* Download buttons */}
         <div className="space-y-3">
-          {files.main_excel && (
+          {/* Admin restore: show main_excel if restored from Firebase */}
+          {outputs.save_status === "restored" && files.main_excel && (
             <DownloadBtn
               file={files.main_excel}
               icon={<FileSpreadsheet className="h-5 w-5 text-green-600" />}
@@ -472,13 +472,24 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {files.ref_excel_a && (
+            {/* Client 1325-only files (from new report processing) */}
+            {files.ref_1325_a && (
+              <DownloadBtn file={files.ref_1325_a} icon={<Download className="h-4 w-4" />} />
+            )}
+            {files.ref_1325_b && (
+              <DownloadBtn file={files.ref_1325_b} icon={<Download className="h-4 w-4" />} />
+            )}
+            {files.ref_1325_combined && (
+              <DownloadBtn file={files.ref_1325_combined} icon={<Download className="h-4 w-4" />} />
+            )}
+            {/* Admin restore: full reference files from Firebase */}
+            {outputs.save_status === "restored" && files.ref_excel_a && (
               <DownloadBtn file={files.ref_excel_a} icon={<Download className="h-4 w-4" />} />
             )}
-            {files.ref_excel_b && (
+            {outputs.save_status === "restored" && files.ref_excel_b && (
               <DownloadBtn file={files.ref_excel_b} icon={<Download className="h-4 w-4" />} />
             )}
-            {files.ref_excel_combined && (
+            {outputs.save_status === "restored" && files.ref_excel_combined && (
               <DownloadBtn file={files.ref_excel_combined} icon={<Download className="h-4 w-4" />} />
             )}
           </div>
