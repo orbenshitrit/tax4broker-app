@@ -43,6 +43,7 @@ interface ReportOutputs {
   proceeds_h2?: number;
   dividends_h1_ils?: number;
   dividends_h2_ils?: number;
+  dividend_tax_withheld_ils?: number;
   save_status?: string;
 }
 
@@ -117,6 +118,7 @@ function Annex1322Dialog({
         proceeds_h2: reportOutputs.proceeds_h2 ?? 0,
         dividends_h1_ils: reportOutputs.dividends_h1_ils ?? 0,
         dividends_h2_ils: reportOutputs.dividends_h2_ils ?? 0,
+        dividend_tax_withheld_ils: reportOutputs.dividend_tax_withheld_ils ?? 0,
       };
       const token = await getToken();
       const raw = await apiFetch<Record<string, string>>("/api/reports/annex-1322", {
