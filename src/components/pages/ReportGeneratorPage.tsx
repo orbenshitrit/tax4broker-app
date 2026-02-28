@@ -143,6 +143,14 @@ function Annex1322Dialog({
           label: isFullYear ? "📄 טופס 1322 — שנתי" : "📄 טופס 1322 — יולי–דצמבר",
         };
       }
+      if (raw.annex_1324_b64) {
+        annexFiles.annex_1324_pdf = {
+          data: raw.annex_1324_b64,
+          name: raw.annex_1324_name || "נספח_1324.pdf",
+          mime: "application/pdf",
+          label: "📄 נספח 1324 — הכנסות מחו\"ל",
+        };
+      }
       onAnnexGenerated(annexFiles);
       onClose();
     } catch (e: unknown) {
@@ -181,7 +189,7 @@ function Annex1322Dialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-ink">נספח 1322</h3>
+          <h3 className="text-lg font-semibold text-ink">נספח 1322 + 1324</h3>
           <button onClick={onClose} className="rounded-lg p-1 text-ink-tertiary hover:bg-surface-muted">
             <X className="h-5 w-5" />
           </button>
@@ -195,7 +203,7 @@ function Annex1322Dialog({
           <div>
             <label className="mb-1.5 block text-sm font-medium text-ink-secondary">מהי שנת הדוח?</label>
             <select className="select" value={year} onChange={(e) => setYear(Number(e.target.value))}>
-              {[2021, 2022, 2023, 2024, 2025].map((y) => (
+              {[2020, 2021, 2022, 2023, 2024, 2025].map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -233,7 +241,7 @@ function Annex1322Dialog({
         </div>
 
         <button className="btn-primary mt-5 w-full" onClick={submit} disabled={loading}>
-          {loading ? "מפיק..." : "הפקת טפסי 1322"}
+          {loading ? "מפיק..." : "הפקת טפסי 1322 + 1324"}
         </button>
       </motion.div>
     </div>
@@ -311,6 +319,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             ref_excel_combined: `📙 אסמכתה שנתית ל-1325`,
             annex_1322_pdf: `📄 טופס 1322 — ינואר–יוני`,
             annex_1322_pdf_h2: `📄 טופס 1322 — יולי–דצמבר`,
+            annex_1324_pdf: `📄 נספח 1324 — הכנסות מחו"ל`,
           };
           downloadedFiles[key] = {
             data: base64,
@@ -428,7 +437,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
   /* ============ DOWNLOAD PAGE ============ */
   if (outputs) {
     const { files } = outputs;
-    const hasAnnex = files.annex_1322_pdf || files.annex_1322_pdf_h2;
+    const hasAnnex = files.annex_1322_pdf || files.annex_1322_pdf_h2 || files.annex_1324_pdf;
 
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
@@ -514,6 +523,9 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
               )}
               {files.annex_1322_pdf_h2 && (
                 <DownloadBtn file={files.annex_1322_pdf_h2} icon={<Download className="h-4 w-4" />} />
+              )}
+              {files.annex_1324_pdf && (
+                <DownloadBtn file={files.annex_1324_pdf} icon={<Download className="h-4 w-4" />} />
               )}
             </div>
           )}
