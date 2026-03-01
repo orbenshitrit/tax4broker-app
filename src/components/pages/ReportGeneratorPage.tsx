@@ -516,22 +516,32 @@ export default function ReportGeneratorPage({ navigate }: Props) {
           <h2 className="mb-3 text-base font-semibold text-ink">📁 העלאת קבצים</h2>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="drop-zone cursor-pointer text-center">
+            <label
+              className={`drop-zone cursor-pointer text-center transition-colors ${tradesFile ? "border-green-300 bg-green-50/50" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-ink", "bg-surface-muted"); }}
+              onDragLeave={(e) => { e.currentTarget.classList.remove("border-ink", "bg-surface-muted"); }}
+              onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("border-ink", "bg-surface-muted"); const f = e.dataTransfer.files[0]; if (f) setTradesFile(f); }}
+            >
               <Upload className="mx-auto mb-2 h-6 w-6 text-ink-tertiary" />
               <span className="block text-sm font-medium text-ink">דוח עסקאות (Trades)</span>
-              <span className="text-xs text-ink-tertiary">CSV בלבד</span>
+              <span className="text-xs text-ink-tertiary">גרור לכאן או לחץ לבחירה · CSV בלבד</span>
               <input
                 type="file"
                 accept=".csv"
                 className="hidden"
                 onChange={(e) => setTradesFile(e.target.files?.[0] ?? null)}
               />
-              {tradesFile && <span className="mt-1 block truncate text-xs text-ink-secondary">{tradesFile.name}</span>}
+              {tradesFile && <span className="mt-1 block truncate text-xs text-green-600 font-medium">✓ {tradesFile.name}</span>}
             </label>
-            <label className="drop-zone cursor-pointer text-center">
+            <label
+              className={`drop-zone cursor-pointer text-center transition-colors ${dividendsFile ? "border-green-300 bg-green-50/50" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-ink", "bg-surface-muted"); }}
+              onDragLeave={(e) => { e.currentTarget.classList.remove("border-ink", "bg-surface-muted"); }}
+              onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("border-ink", "bg-surface-muted"); const f = e.dataTransfer.files[0]; if (f) setDividendsFile(f); }}
+            >
               <Upload className="mx-auto mb-2 h-6 w-6 text-ink-tertiary" />
               <span className="block text-sm font-medium text-ink">דוח דיבידנדים</span>
-              <span className="text-xs text-ink-tertiary">אופציונלי</span>
+              <span className="text-xs text-ink-tertiary">גרור לכאן או לחץ לבחירה · אופציונלי</span>
               <input
                 type="file"
                 accept=".csv"
@@ -539,7 +549,7 @@ export default function ReportGeneratorPage({ navigate }: Props) {
                 onChange={(e) => setDividendsFile(e.target.files?.[0] ?? null)}
               />
               {dividendsFile && (
-                <span className="mt-1 block truncate text-xs text-ink-secondary">{dividendsFile.name}</span>
+                <span className="mt-1 block truncate text-xs text-green-600 font-medium">✓ {dividendsFile.name}</span>
               )}
             </label>
           </div>
