@@ -298,8 +298,16 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setError("");
     try {
       // Download files from backend for each known key
-      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "ref_excel_combined", "annex_1322_pdf", "annex_1322_pdf_h2"];
+      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "ref_excel_combined", "annex_1322_pdf", "annex_1322_pdf_h2", "annex_1324_pdf"];
       const downloadedFiles: Record<string, ReportFile> = {};
+
+      // Map storage keys to client-facing keys (same as normal report flow)
+      const keyMap: Record<string, string> = {
+        ref_excel_a: "ref_1325_a",
+        ref_excel_b: "ref_1325_b",
+        ref_excel_combined: "ref_1325_combined",
+      };
+
       for (const key of fileKeys) {
         try {
           const res = await fetch(
@@ -307,6 +315,12 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             { headers: { Authorization: `Bearer ${await (await import("@/lib/firebase")).auth.currentUser?.getIdToken()}` } }
           );
           if (!res.ok) continue;
+
+          // Extract filename from Content-Disposition header
+          const cd = res.headers.get("content-disposition") || "";
+          const filenameMatch = cd.match(/filename="?([^";\n]+)"?/);
+          const backendName = filenameMatch ? decodeURIComponent(filenameMatch[1]) : "";
+
           const blob = await res.blob();
           const base64 = await new Promise<string>((resolve) => {
             const reader = new FileReader();
@@ -314,18 +328,25 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             reader.readAsDataURL(blob);
           });
           const isPdf = key.includes("pdf");
+
+          // Use the same labels as the normal report flow
           const labels: Record<string, string> = {
-            main_excel: `📗 דוח ראשי — ${selectedReport.fileName || "report"}.xlsx`,
-            ref_excel_a: `📙 אסמכתה ל-1325 א`,
-            ref_excel_b: `📙 אסמכתה ל-1325 ב`,
-            ref_excel_combined: `📙 אסמכתה שנתית ל-1325`,
+            main_excel: `📗 דוח ראשי — ${selectedReport.clientName}`,
+            ref_excel_a: "📙 1325 א",
+            ref_excel_b: "📙 1325 ב",
+            ref_excel_combined: "📙 1325A+B",
             annex_1322_pdf: `📄 טופס 1322 — ינואר–יוני`,
             annex_1322_pdf_h2: `📄 טופס 1322 — יולי–דצמבר`,
             annex_1324_pdf: `📄 נספח 1324 — הכנסות מחו"ל`,
           };
-          downloadedFiles[key] = {
+
+          // Use the mapped key (ref_excel_a → ref_1325_a) so it matches the normal flow UI
+          const outputKey = keyMap[key] || key;
+          const fileName = backendName || (isPdf ? `${key}.pdf` : `${key}.xlsx`);
+
+          downloadedFiles[outputKey] = {
             data: base64,
-            name: isPdf ? `${key}_${selectedReport.clientName}.pdf` : `${key}_${selectedReport.clientName}.xlsx`,
+            name: fileName,
             mime: isPdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             label: labels[key] || key,
           };
@@ -492,16 +513,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
             )}
             {files.ref_1325_combined && (
               <DownloadBtn file={files.ref_1325_combined} icon={<Download className="h-4 w-4" />} />
-            )}
-            {/* Admin restore: full reference files from Firebase */}
-            {outputs.save_status === "restored" && files.ref_excel_a && (
-              <DownloadBtn file={files.ref_excel_a} icon={<Download className="h-4 w-4" />} />
-            )}
-            {outputs.save_status === "restored" && files.ref_excel_b && (
-              <DownloadBtn file={files.ref_excel_b} icon={<Download className="h-4 w-4" />} />
-            )}
-            {outputs.save_status === "restored" && files.ref_excel_combined && (
-              <DownloadBtn file={files.ref_excel_combined} icon={<Download className="h-4 w-4" />} />
             )}
           </div>
 
