@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
-import type { Page, ReportMeta } from "@/components/AppShell";
+import type { Page } from "@/components/AppShell";
 import {
   ArrowRight,
   Upload,
@@ -11,7 +11,6 @@ import {
   Download,
   FileSpreadsheet,
   FilePlus,
-  Archive,
   CheckCircle2,
   AlertTriangle,
   X,
@@ -49,8 +48,6 @@ interface ReportOutputs {
 
 interface Props {
   navigate: (page: Page) => void;
-  selectedReport: ReportMeta | null;
-  clearSelectedReport: () => void;
 }
 
 /* ---------- Progress Steps ---------- */
@@ -274,7 +271,7 @@ function DownloadBtn({ file, icon, className = "" }: { file: ReportFile; icon: R
 }
 
 /* ---------- Report Generator ---------- */
-export default function ReportGeneratorPage({ navigate, selectedReport, clearSelectedReport }: Props) {
+export default function ReportGeneratorPage({ navigate }: Props) {
   const { userData, refreshUserData, getToken } = useAuth();
   const credits = userData?.credits ?? 0;
 
@@ -287,93 +284,9 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
   const [outputs, setOutputs] = useState<ReportOutputs | null>(null);
   const [annexOpen, setAnnexOpen] = useState(false);
   const [annexShown, setAnnexShown] = useState(false);
-  const [restoring, setRestoring] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-
-  /* ---- Restore handler ---- */
-  const handleRestore = useCallback(async () => {
-    if (!selectedReport) return;
-    setRestoring(true);
-    setError("");
-    try {
-      // Download files from backend for each known key
-      const fileKeys = ["main_excel", "ref_excel_a", "ref_excel_b", "ref_excel_combined", "annex_1322_pdf", "annex_1322_pdf_h2", "annex_1324_pdf"];
-      const downloadedFiles: Record<string, ReportFile> = {};
-
-      // Map storage keys to client-facing keys (same as normal report flow)
-      const keyMap: Record<string, string> = {
-        ref_excel_a: "ref_1325_a",
-        ref_excel_b: "ref_1325_b",
-        ref_excel_combined: "ref_1325_combined",
-      };
-
-      for (const key of fileKeys) {
-        try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || ""}/api/reports/restore/${selectedReport.id}/${key}`,
-            { headers: { Authorization: `Bearer ${await (await import("@/lib/firebase")).auth.currentUser?.getIdToken()}` } }
-          );
-          if (!res.ok) continue;
-
-          // Extract filename from Content-Disposition header
-          const cd = res.headers.get("content-disposition") || "";
-          const filenameMatch = cd.match(/filename="?([^";\n]+)"?/);
-          const backendName = filenameMatch ? decodeURIComponent(filenameMatch[1]) : "";
-
-          const blob = await res.blob();
-          const base64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
-            reader.readAsDataURL(blob);
-          });
-          const isPdf = key.includes("pdf");
-
-          // Use the same labels as the normal report flow
-          const labels: Record<string, string> = {
-            main_excel: `📗 דוח ראשי — ${selectedReport.clientName}`,
-            ref_excel_a: "📙 1325 א",
-            ref_excel_b: "📙 1325 ב",
-            ref_excel_combined: "📙 1325A+B",
-            annex_1322_pdf: `📄 טופס 1322 — ינואר–יוני`,
-            annex_1322_pdf_h2: `📄 טופס 1322 — יולי–דצמבר`,
-            annex_1324_pdf: `📄 נספח 1324 — הכנסות מחו"ל`,
-          };
-
-          // Use the mapped key (ref_excel_a → ref_1325_a) so it matches the normal flow UI
-          const outputKey = keyMap[key] || key;
-          const fileName = backendName || (isPdf ? `${key}.pdf` : `${key}.xlsx`);
-
-          downloadedFiles[outputKey] = {
-            data: base64,
-            name: fileName,
-            mime: isPdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            label: labels[key] || key,
-          };
-        } catch {
-          /* file not found — skip */
-        }
-      }
-      if (Object.keys(downloadedFiles).length === 0) {
-        setError("לא נמצאו קבצים שמורים בדוח זה.");
-      } else {
-        setOutputs({
-          report_id: selectedReport.id,
-          client_name: selectedReport.clientName,
-          account_id: selectedReport.accountId,
-          year: selectedReport.year,
-          h1_count: 0,
-          h2_count: 0,
-          files: downloadedFiles,
-          save_status: "restored",
-        });
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "שגיאה בשחזור");
-    } finally {
-      setRestoring(false);
-    }
-  }, [selectedReport]);
 
   /* ---- Process report ---- */
   const processReport = useCallback(async () => {
@@ -437,11 +350,12 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     if (!outputs) return;
     setOutputs({ ...outputs, files: { ...outputs.files, ...files } });
     setAnnexShown(true);
+    setEmailSent(true); // Backend auto-sends email with all files
   }, [outputs]);
 
   /* Auto-open annex 1322 dialog when report completes */
   useEffect(() => {
-    if (outputs && !annexShown && outputs.save_status !== "restored" && !annexOpen) {
+    if (outputs && !annexShown && !annexOpen) {
       setAnnexOpen(true);
     }
   }, [outputs, annexShown, annexOpen]);
@@ -454,7 +368,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
     setError("");
     setProgress(0);
     setAnnexShown(false);
-    clearSelectedReport();
+    setEmailSent(false);
   };
 
   /* ============ DOWNLOAD PAGE ============ */
@@ -478,6 +392,14 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           <span><strong>שנה:</strong> {outputs.year}</span>
         </div>
 
+        {/* Email sent notice */}
+        {emailSent && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            כל הקבצים נשלחו למייל שלך.
+          </div>
+        )}
+
         {/* Save status */}
         {outputs.save_status === "local" && (
           <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
@@ -494,15 +416,6 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
 
         {/* Download buttons */}
         <div className="space-y-3">
-          {/* Admin restore: show main_excel if restored from Firebase */}
-          {outputs.save_status === "restored" && files.main_excel && (
-            <DownloadBtn
-              file={files.main_excel}
-              icon={<FileSpreadsheet className="h-5 w-5 text-green-600" />}
-              className="border-green-200 bg-green-50 hover:bg-green-100 text-green-800 font-medium"
-            />
-          )}
-
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {/* Client 1325-only files (from new report processing) */}
             {files.ref_1325_a && (
@@ -517,7 +430,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
           </div>
 
           {/* Annex 1322 */}
-          {!hasAnnex && !annexShown && outputs.save_status !== "restored" && (
+          {!hasAnnex && !annexShown && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-2 text-sm text-amber-700">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -584,21 +497,8 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
         <GuidePage />
       </div>
 
-      {/* Restore mode */}
-      {selectedReport && (
-        <div className="card mb-6 border-edge bg-surface-muted p-4">
-          <p className="mb-3 text-sm text-ink-secondary">
-            🔄 מצב שחזור — ניתן להוריד את הדוח השמור: <strong>{selectedReport.clientName}</strong>
-          </p>
-          <button className="btn-primary flex items-center gap-1.5 text-sm" onClick={handleRestore} disabled={restoring}>
-            <Archive className="h-4 w-4" />
-            {restoring ? "טוען קבצים..." : "הורד דוח שמור"}
-          </button>
-        </div>
-      )}
-
       {/* No credits warning */}
-      {credits <= 0 && !selectedReport && (
+      {credits <= 0 && (
         <div className="card mb-6 border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-2 text-sm text-amber-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -611,7 +511,7 @@ export default function ReportGeneratorPage({ navigate, selectedReport, clearSel
       )}
 
       {/* Upload section */}
-      {(credits > 0 || selectedReport) && (
+      {credits > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2 className="mb-3 text-base font-semibold text-ink">📁 העלאת קבצים</h2>
 

@@ -28,7 +28,6 @@ const WHATSAPP_LINK =
 
 interface Props {
   navigate: (page: Page) => void;
-  navigateToRestore: (report: ReportMeta) => void;
   isAdmin: boolean;
 }
 
@@ -557,7 +556,7 @@ function FreeCheckShareDialog({
 }
 
 /* ---------- Dashboard ---------- */
-export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: Props) {
+export default function DashboardPage({ navigate, isAdmin }: Props) {
   const { user, userData, logout, refreshUserData, getToken } = useAuth();
   const credits = userData?.credits ?? 0;
 
@@ -764,12 +763,7 @@ export default function DashboardPage({ navigate, navigateToRestore, isAdmin }: 
                     {r.issuedAt} &middot; {r.reportPeriod} &middot; חשבון {r.accountId}
                   </p>
                 </div>
-                <button
-                  className="btn-secondary flex items-center gap-1 text-xs whitespace-nowrap"
-                  onClick={() => navigateToRestore(r)}
-                >
-                  <Archive className="h-3.5 w-3.5" /> שחזר
-                </button>
+
               </div>
             ))}
             {history.length > historyLimit && (

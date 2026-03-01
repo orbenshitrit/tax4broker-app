@@ -25,16 +25,9 @@ export interface ReportMeta {
 export default function AppShell() {
   const { userData } = useAuth();
   const [page, setPage] = useState<Page>("dashboard");
-  const [selectedReport, setSelectedReport] = useState<ReportMeta | null>(null);
 
   const navigate = useCallback((p: Page) => {
     setPage(p);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
-
-  const navigateToRestore = useCallback((report: ReportMeta) => {
-    setSelectedReport(report);
-    setPage("generator");
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
@@ -52,15 +45,12 @@ export default function AppShell() {
         {page === "dashboard" && (
           <DashboardPage
             navigate={navigate}
-            navigateToRestore={navigateToRestore}
             isAdmin={isAdmin}
           />
         )}
         {page === "generator" && (
           <ReportGeneratorPage
             navigate={navigate}
-            selectedReport={selectedReport}
-            clearSelectedReport={() => setSelectedReport(null)}
           />
         )}
         {page === "pricing" && <PricingPage navigate={navigate} />}
