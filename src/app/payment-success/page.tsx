@@ -1,34 +1,55 @@
 "use client";
 
 import { Suspense, useEffect, useState, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { useSearchParams, useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { apiFetch } from "@/lib/api";
 
 function PaymentVerifier() {
   const searchParams = useSearchParams();
-  const { user, getToken, refreshUserData } = useAuth();
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const router = useRouter();
+  const [status, setStatus] = useState<"loading" | "verifying" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
   const [creditsAdded, setCreditsAdded] = useState(0);
   const verifiedRef = useRef(false);
 
   useEffect(() => {
-    if (!user || verifiedRef.current) return;
-    verifiedRef.current = true;
+    if (verifiedRef.current) return;
 
-    const paymentId = searchParams.get("payment_id");
-    const documentId = searchParams.get("DocumentID") || searchParams.get("TransactionDocumentID");
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user || verifiedRef.current) return;
+      verifiedRef.current = true;
+      setStatus("verifying");
 
-    if (!paymentId) {
-      setStatus("error");
-      setMessage("חסר מזהה תשלום");
-      return;
-    }
+      const paymentId = searchParams.get("payment_id");
 
-    (async () => {
+      if (!paymentId) {
+        setStatus("error");
+        setMessage("חסר מזהה תשלום");
+        return;
+      }
+
       try {
-        const token = await getToken();
+        const token = await user.getIdToken();
+
+        // First check payment status
+        const statusRes = await apiFetch<{
+          ok: boolean;
+          status: string;
+          credits: number;
+        }>(`/api/payments/status/${paymentId}`, { token });
+
+        if (statusRes.status === "completed") {
+          setStatus("success");
+          setMessage("התשלום כבר עובד בעבר");
+          setCreditsAdded(statusRes.credits);
+          return;
+        }
+
+        // Try to verify with SUMIT
+        const documentId = searchParams.get("DocumentID") || searchParams.get("TransactionDocumentID");
+
         const res = await apiFetch<{
           ok: boolean;
           message: string;
@@ -43,31 +64,28 @@ function PaymentVerifier() {
           token,
         });
 
-        if (res.message === "already_processed") {
-          setStatus("success");
-          setMessage("התשלום כבר עובד בעבר");
-          setCreditsAdded(res.credits || 0);
-        } else {
-          setStatus("success");
-          setMessage("התשלום אומת בהצלחה!");
-          setCreditsAdded(res.credits_added || 0);
-        }
-        await refreshUserData();
+        setStatus("success");
+        setMessage(res.message === "already_processed" ? "התשלום כבר עובד בעבר" : "התשלום אומת בהצלחה!");
+        setCreditsAdded(res.credits_added || res.credits || 0);
       } catch (e: unknown) {
         const errMsg = e instanceof Error ? e.message : "שגיאה באימות התשלום";
         setStatus("error");
         setMessage(errMsg);
       }
-    })();
-  }, [user, searchParams, getToken, refreshUserData]);
+    });
+
+    return () => unsub();
+  }, [searchParams]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-        {status === "verifying" && (
+        {(status === "loading" || status === "verifying") && (
           <>
             <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand border-t-transparent" />
-            <h1 className="text-xl font-bold text-ink">מאמת תשלום...</h1>
+            <h1 className="text-xl font-bold text-ink">
+              {status === "loading" ? "טוען..." : "מאמת תשלום..."}
+            </h1>
             <p className="mt-2 text-ink/60">אנא המתן</p>
           </>
         )}
@@ -86,12 +104,12 @@ function PaymentVerifier() {
                 +{creditsAdded} קרדיטים נוספו לחשבונך
               </p>
             )}
-            <a
-              href="/"
+            <button
+              onClick={() => router.push("/")}
               className="mt-6 inline-block rounded-xl bg-brand px-6 py-3 text-white font-medium hover:bg-brand/90 transition"
             >
               חזרה למערכת
-            </a>
+            </button>
           </>
         )}
 
@@ -104,15 +122,13 @@ function PaymentVerifier() {
             </div>
             <h1 className="text-2xl font-bold text-red-700">שגיאה באימות התשלום</h1>
             <p className="mt-2 text-ink/70">{message}</p>
-            <p className="mt-2 text-sm text-ink/50">
-              אם חויבת, פנה לתמיכה ונטפל בזה באופן ידני
-            </p>
-            <a
-              href="/"
+            <p className="mt-2 text-sm text-ink/50">אם חויבת, פנה לתמיכה</p>
+            <button
+              onClick={() => router.push("/")}
               className="mt-6 inline-block rounded-xl bg-brand px-6 py-3 text-white font-medium hover:bg-brand/90 transition"
             >
               חזרה למערכת
-            </a>
+            </button>
           </>
         )}
       </div>
@@ -122,17 +138,15 @@ function PaymentVerifier() {
 
 export default function PaymentSuccessPage() {
   return (
-    <AuthProvider>
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center bg-surface">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink border-t-transparent" />
-          </div>
-        }
-      >
-        <PaymentVerifier />
-      </Suspense>
-    </AuthProvider>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-surface">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink border-t-transparent" />
+        </div>
+      }
+    >
+      <PaymentVerifier />
+    </Suspense>
   );
 }
 }
