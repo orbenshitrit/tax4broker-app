@@ -48,8 +48,13 @@ export default function PricingPage({ navigate }: Props) {
         }
       );
       if (res.payment_url) {
-        window.open(res.payment_url, "_blank");
-        setSuccess("חלון התשלום נפתח. לאחר ביצוע התשלום, רענן את האתר כדי שהקרדיטים יתעדכנו.");
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = res.payment_url;
+        } else {
+          window.open(res.payment_url, "_blank");
+          setSuccess("חלון התשלום נפתח. לאחר ביצוע התשלום, רענן את האתר כדי שהקרדיטים יתעדכנו.");
+        }
       } else {
         setError("לא התקבל קישור תשלום");
       }
