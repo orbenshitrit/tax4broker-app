@@ -77,6 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const token = await fbUser.getIdToken();
           const data = await apiFetch<UserData>("/api/auth/me", { token });
           setUserData(data);
+
+          // Check & process any pending payments
+          try {
+            const pendingRes = await apiFetch<{ processed: number; credits_added: number }>(
+              "/api/payments/check-pending",
+              { method: "POST", token }
+            );
+            if (pendingRes.processed > 0) {
+              // Refresh user data to get updated credits
+              const refreshed = await apiFetch<UserData>("/api/auth/me", { token });
+              setUserData(refreshed);
+            }
+          } catch {
+            // Silent fail — not critical
+          }
         } catch {
           setUserData(null);
         }
