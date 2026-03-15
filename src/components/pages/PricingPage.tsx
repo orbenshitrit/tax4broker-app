@@ -22,6 +22,9 @@ export default function PricingPage({ navigate }: Props) {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [payingPlanId, setPayingPlanId] = useState<number | null>(null);
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discountApplied, setDiscountApplied] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
@@ -32,11 +35,15 @@ export default function PricingPage({ navigate }: Props) {
     setSuccess("");
     try {
       const token = await getToken();
+      const payload: Record<string, unknown> = { plan_id: planId, quantity: 1 };
+      if (discountApplied && discountCode) {
+        payload.coupon_code = discountCode;
+      }
       const res = await apiFetch<{ ok: boolean; payment_url: string }>(
         "/api/payments/create-link",
         {
           method: "POST",
-          body: JSON.stringify({ plan_id: planId, quantity: 1 }),
+          body: JSON.stringify(payload),
           token,
         }
       );
@@ -58,7 +65,32 @@ export default function PricingPage({ navigate }: Props) {
     }
   };
 
-  /* ---- Coupon redemption ---- */
+  /* ---- Apply discount code ---- */
+  const applyDiscount = async () => {
+    if (!discountCode.trim()) return;
+    setError("");
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ ok: boolean; discount_percent: number }>(
+        "/api/payments/validate-coupon",
+        {
+          method: "POST",
+          body: JSON.stringify({ coupon_code: discountCode.trim() }),
+          token,
+        }
+      );
+      setDiscountPercent(res.discount_percent);
+      setDiscountApplied(true);
+      setSuccess(`קוד הנחה ${res.discount_percent}% הוחל בהצלחה!`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg || "קוד הנחה לא תקין");
+      setDiscountApplied(false);
+      setDiscountPercent(0);
+    }
+  };
+
+  /* ---- Coupon redemption (credits) ---- */
   const redeemCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
@@ -122,6 +154,41 @@ export default function PricingPage({ navigate }: Props) {
         </div>
       )}
 
+      {/* Discount Code for Payment */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.32 }}
+        className="card mt-6 p-4"
+      >
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value.toUpperCase());
+              setDiscountApplied(false);
+              setDiscountPercent(0);
+            }}
+            placeholder="קוד הנחה לתשלום"
+            className="input flex-1 text-center font-mono tracking-widest"
+            dir="ltr"
+            onKeyDown={(e) => e.key === "Enter" && applyDiscount()}
+          />
+          <button
+            className={`whitespace-nowrap px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+              discountApplied
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "btn-primary"
+            }`}
+            onClick={applyDiscount}
+            disabled={!discountCode.trim() || discountApplied}
+          >
+            {discountApplied ? `✓ ${discountPercent}% הנחה` : "החל הנחה"}
+          </button>
+        </div>
+      </motion.div>
+
       {/* Plans */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         {PLANS.map((plan) => (
@@ -148,11 +215,19 @@ export default function PricingPage({ navigate }: Props) {
 
             <div className="mt-2 flex items-baseline gap-2">
               <p className="text-3xl font-bold tracking-tight text-ink">
-                ₪{plan.price.toLocaleString("he-IL")}
+                ₪{discountApplied
+                  ? Math.round(plan.price * (1 - discountPercent / 100)).toLocaleString("he-IL")
+                  : plan.price.toLocaleString("he-IL")}
               </p>
-              <p className="text-base text-ink-tertiary line-through">
-                ₪{plan.originalPrice.toLocaleString("he-IL")}
-              </p>
+              {discountApplied ? (
+                <p className="text-base text-red-400 line-through">
+                  ₪{plan.price.toLocaleString("he-IL")}
+                </p>
+              ) : (
+                <p className="text-base text-ink-tertiary line-through">
+                  ₪{plan.originalPrice.toLocaleString("he-IL")}
+                </p>
+              )}
             </div>
 
             <p className="mt-1 text-sm font-medium text-ink-tertiary">
@@ -177,7 +252,9 @@ export default function PricingPage({ navigate }: Props) {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    לתשלום ₪{plan.price.toLocaleString("he-IL")}
+                    לתשלום ₪{discountApplied
+                      ? Math.round(plan.price * (1 - discountPercent / 100)).toLocaleString("he-IL")
+                      : plan.price.toLocaleString("he-IL")}
                   </span>
                 )}
               </button>
