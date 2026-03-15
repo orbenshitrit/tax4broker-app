@@ -48,7 +48,7 @@ export default function PricingPage({ navigate }: Props) {
         }
       );
       if (res.payment_url) {
-        window.location.href = res.payment_url;
+        window.open(res.payment_url, "_blank");
       } else {
         setError("לא התקבל קישור תשלום");
       }
