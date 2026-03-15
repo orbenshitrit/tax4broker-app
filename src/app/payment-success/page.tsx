@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 
-export default function PaymentSuccessPage() {
+function PaymentVerifier() {
   const searchParams = useSearchParams();
   const { user, getToken, refreshUserData } = useAuth();
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
@@ -118,4 +118,21 @@ export default function PaymentSuccessPage() {
       </div>
     </div>
   );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <AuthProvider>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-surface">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink border-t-transparent" />
+          </div>
+        }
+      >
+        <PaymentVerifier />
+      </Suspense>
+    </AuthProvider>
+  );
+}
 }
