@@ -49,6 +49,7 @@ export default function PricingPage({ navigate }: Props) {
       );
       if (res.payment_url) {
         window.open(res.payment_url, "_blank");
+        setSuccess("חלון התשלום נפתח. לאחר ביצוע התשלום, רענן את האתר כדי שהקרדיטים יתעדכנו.");
       } else {
         setError("לא התקבל קישור תשלום");
       }
