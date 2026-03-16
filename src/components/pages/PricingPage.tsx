@@ -27,6 +27,40 @@ export default function PricingPage({ navigate }: Props) {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [waitingPaymentId, setWaitingPaymentId] = useState<string | null>(null);
+
+  /* ---- Poll for payment confirmation ---- */
+  const pollPaymentStatus = (paymentId: string) => {
+    setWaitingPaymentId(paymentId);
+    setSuccess("חלון התשלום נפתח. ממתין לאישור תשלום...");
+
+    let attempts = 0;
+    const maxAttempts = 60; // 3 minutes (every 3 seconds)
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(interval);
+        setWaitingPaymentId(null);
+        setSuccess("לא התקבל אישור תשלום. אם שילמת, רענן את הדף.");
+        return;
+      }
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ ok: boolean; status: string; credits: number }>(
+          `/api/payments/status/${paymentId}`,
+          { token }
+        );
+        if (res.status === "completed") {
+          clearInterval(interval);
+          setWaitingPaymentId(null);
+          setSuccess(`התשלום התקבל בהצלחה! +${res.credits} קרדיטים. לחץ על הכפתור למטה לרענון.`);
+          refreshUserData();
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+  };
 
   /* ---- SUMIT payment ---- */
   const handlePurchase = async (planId: number) => {
@@ -39,7 +73,7 @@ export default function PricingPage({ navigate }: Props) {
       if (discountApplied && discountCode) {
         payload.coupon_code = discountCode;
       }
-      const res = await apiFetch<{ ok: boolean; payment_url: string }>(
+      const res = await apiFetch<{ ok: boolean; payment_url: string; payment_id: string }>(
         "/api/payments/create-link",
         {
           method: "POST",
@@ -53,7 +87,7 @@ export default function PricingPage({ navigate }: Props) {
           window.location.href = res.payment_url;
         } else {
           window.open(res.payment_url, "_blank");
-          setSuccess("חלון התשלום נפתח. לאחר ביצוע התשלום, רענן את האתר כדי שהקרדיטים יתעדכנו.");
+          pollPaymentStatus(res.payment_id);
         }
       } else {
         setError("לא התקבל קישור תשלום");
@@ -149,9 +183,23 @@ export default function PricingPage({ navigate }: Props) {
 
       {/* Messages */}
       {success && (
-        <div className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-center text-sm text-green-600">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          {success}
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-600">
+          <div className="flex items-center justify-center gap-2">
+            {waitingPaymentId ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            )}
+            {success}
+          </div>
+          {!waitingPaymentId && success.includes("קרדיטים") && (
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-700 transition"
+            >
+              🔄 רענן את הדף לקבלת הקרדיטים
+            </button>
+          )}
         </div>
       )}
       {error && (
