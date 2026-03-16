@@ -48,7 +48,17 @@ function PaymentVerifier() {
         }
 
         // Try to verify with SUMIT
-        const documentId = searchParams.get("DocumentID") || searchParams.get("TransactionDocumentID");
+        // SUMIT may append different param names after redirect
+        const documentId = searchParams.get("DocumentID") 
+          || searchParams.get("TransactionDocumentID")
+          || searchParams.get("documentId")
+          || searchParams.get("transactionDocumentId")
+          || searchParams.get("document_id")
+          || searchParams.get("id")
+          || searchParams.get("docid");
+
+        // Log all params for debugging
+        console.log("[payment-success] All URL params:", Object.fromEntries(searchParams.entries()));
 
         const res = await apiFetch<{
           ok: boolean;
